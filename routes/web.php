@@ -4,15 +4,12 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+// Página inicial personalizada
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
+    return Inertia::render('Home/Index');
 });
 
+// Rotas protegidas por autenticação
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
