@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Galerias do Grupo: {{ audience_group_name }} - {{ project_name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-4xl font-bold text-roxo1 mb-8 text-center">Galerias do Grupo: {{ audience_group_name }}</h1>
+
+    <!-- Botão Voltar para Grupos -->
+    <div class="text-center mb-8">
+        {# CORREÇÃO: O botão voltar aqui aponta para a lista de TODOS os grupos do usuário #}
+        <a href="{% url 'galleries:client_group_list' %}" class="px-6 py-3 bg-roxo2 text-branco1 rounded-lg shadow-md hover:bg-roxo1 transition duration-300 w-full sm:w-auto text-center inline-flex items-center justify-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            <span class="hidden sm:inline">&larr; Voltar para Meus Grupos</span>
+            <span class="inline sm:hidden">&larr; Voltar</span>
+        </a>
+    </div>
+
+    <!-- Seção de Filtros e Ordenação -->
+    <div class="bg-prata1 p-6 rounded-lg shadow-md mb-8">
+        <h2 class="text-2xl font-semibold text-roxo1 mb-4">Filtrar Galerias</h2>
+        <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
+            <div>
+                <label for="search_query" class="block text-sm font-medium text-preto1 mb-1">Buscar por Nome/Descrição:</label>
+                <input type="text" id="search_query" name="q"
+                       value="{{ search_query }}"
+                       placeholder="Buscar galerias..."
+                       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-roxo1 focus:border-roxo1 sm:text-sm bg-branco1 text-preto1">
+            </div>
+            <div>
+                <label for="start_date" class="block text-sm font-medium text-preto1 mb-1">Data de Início:</label>
+                <input type="date" id="start_date" name="start_date"
+                       value="{{ filtered_start_date }}"
+                       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-roxo1 focus:border-roxo1 sm:text-sm bg-branco1 text-preto1">
+            </div>
+            <div>
+                <label for="end_date" class="block text-sm font-medium text-preto1 mb-1">Data de Fim:</label>
+                <input type="date" id="end_date" name="end_date"
+                       value="{{ filtered_end_date }}"
+                       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-roxo1 focus:border-roxo1 sm:text-sm bg-branco1 text-preto1">
+            </div>
+            <div class="flex flex-col sm:flex-row gap-4 lg:col-span-1">
+                <button type="submit" class="w-full sm:w-auto px-4 py-2 bg-roxo2 text-branco1 rounded-md shadow-sm hover:bg-roxo1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-roxo1 transition duration-300">
+                    Aplicar Filtro
+                </button>
+                {# Botão para limpar os filtros #}
+                {% if filtered_start_date or filtered_end_date or search_query %}
+                    <a href="{% url 'galleries:client_gallery_list' audience_group_pk %}" class="w-full sm:w-auto px-4 py-2 bg-cinza1 text-branco1 rounded-md shadow-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 text-center transition duration-300">
+                        Limpar Filtro
+                    </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    {% if galleries %}
+        {# Ajustado para 2 colunas em telas extra pequenas, 3 em sm, 4 em md e lg #}
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-6">
+            {% for gallery in galleries %}
+                <div class="bg-prata1 border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                    <a href="{% url 'galleries:client_gallery_detail' pk=gallery.pk %}">
+                        {% if gallery.cover_image and gallery.cover_image.image_file_thumb %}
+                            <img src="{{ gallery.cover_image.image_file_thumb.url }}" alt="Capa da Galeria: {{ gallery.name }}" class="w-full h-48 object-cover rounded-t-lg">
+                        {% else %}
+                            {# Alterada a URL da imagem de placeholder para incluir quebra de linha e centralização #}
+                            <img src="https://placehold.co/400x300/e0e0e0/555555?text=Sem%0ACapa" alt="Sem Capa" class="w-full h-48 object-cover rounded-t-lg">
+                        {% endif %}
+                    </a>
+                    <div class="p-4">
+                        <h3 class="text-lg font-semibold text-roxo1 truncate">{{ gallery.name }}</h3>
+                        <p class="text-sm text-preto1">{{ gallery.event_date|date:"d/m/Y" }}</p>
+                        <p class="text-xs text-cinza1 mt-1 truncate">{{ gallery.description|default:"Nenhuma descrição." }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        {# Paginação #}
+        {% if is_paginated %}
+        <div class="flex justify-center mt-8 px-4 sm:px-0"> {# Adicionado px-4 para o contêiner da paginação em telas pequenas #}
+            {# Versão para telas grandes (sm e acima) - visível apenas em telas maiores #}
+            <nav class="relative z-0 hidden sm:flex flex-wrap justify-center rounded-md shadow-sm gap-1" aria-label="Pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}{% if filtered_start_date %}&start_date={{ filtered_start_date }}{% endif %}{% if filtered_end_date %}&end_date={{ filtered_end_date }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="relative inline-flex items-center px-2 sm:px-4 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <span class="sr-only">Anterior</span>
+                        <!-- Heroicon name: solid/chevron-left -->
+                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                    </a>
+                {% endif %}
+
+                {% for i in paginator.page_range %}
+                    {# Ajustado o padding horizontal para px-2 em telas pequenas, e px-4 em sm e maiores #}
+                    <a href="?page={{ i }}{% if filtered_start_date %}&start_date={{ filtered_start_date }}{% endif %}{% if filtered_end_date %}&end_date={{ filtered_end_date }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="{% if page_obj.number == i %}z-10 bg-laranja1 text-white{% else %}bg-white border-gray-300 text-gray-700 hover:bg-gray-50{% endif %} relative inline-flex items-center px-2 sm:px-4 py-2 border text-sm font-medium">
+                        {{ i }}
+                    </a>
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if filtered_start_date %}&start_date={{ filtered_start_date }}{% endif %}{% if filtered_end_date %}&end_date={{ filtered_end_date }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <span class="sr-only">Próxima</span>
+                        <!-- Heroicon name: solid/chevron-right -->
+                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                        </svg>
+                    </a>
+                {% endif %}
+            </nav>
+
+            {# Versão para telas pequenas (abaixo de sm) - visível apenas em telas menores #}
+            <div class="flex flex-col items-center sm:hidden w-full"> {# Adicionado w-full para ocupar toda a largura #}
+                <!-- Help text -->
+                <span class="text-sm text-gray-700 dark:text-gray-400">
+                    Página <span class="font-semibold text-gray-900 dark:text-white">{{ page_obj.number }}</span> de <span class="font-semibold text-gray-900 dark:text-white">{{ paginator.num_pages }}</span>
+                </span>
+                <div class="inline-flex mt-2 xs:mt-0">
+                    <!-- Buttons -->
+                    {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}{% if filtered_start_date %}&start_date={{ filtered_start_date }}{% endif %}{% if filtered_end_date %}&end_date={{ filtered_end_date }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="flex items-center justify-center px-3 h-8 text-sm font-medium text-white bg-roxo2 rounded-s hover:bg-roxo1 dark:bg-roxo2 dark:border-gray-700 dark:text-branco1 dark:hover:bg-roxo1 dark:hover:text-branco1">
+                            <svg class="w-3.5 h-3.5 me-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5H1m0 0 4 4M1 5l4-4"/>
+                            </svg>
+                            Anterior
+                        </a>
+                    {% else %}
+                        <button disabled class="flex items-center justify-center px-3 h-8 text-sm font-medium text-gray-400 bg-gray-600 rounded-s cursor-not-allowed">
+                            <svg class="w-3.5 h-3.5 me-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5H1m0 0 4 4M1 5l4-4"/>
+                            </svg>
+                            Anterior
+                        </button>
+                    {% endif %}
+
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}{% if filtered_start_date %}&start_date={{ filtered_start_date }}{% endif %}{% if filtered_end_date %}&end_date={{ filtered_end_date }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="flex items-center justify-center px-3 h-8 text-sm font-medium text-white bg-roxo2 border-0 border-s border-gray-700 rounded-e hover:bg-roxo1 dark:bg-roxo2 dark:border-gray-700 dark:text-branco1 dark:hover:bg-roxo1 dark:hover:text-branco1">
+                            Próxima
+                            <svg class="w-3.5 h-3.5 ms-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>
+                            </svg>
+                        </a>
+                    {% else %}
+                        <button disabled class="flex items-center justify-center px-3 h-8 text-sm font-medium text-gray-400 bg-gray-600 border-0 border-s border-gray-700 rounded-e cursor-not-allowed">
+                            Próxima
+                            <svg class="w-3.5 h-3.5 ms-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>
+                            </svg>
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    {% else %}
+        <p class="text-preto1 text-center py-4">Nenhuma galeria disponível para este grupo no momento.</p>
+    {% endif %}
+</div>
+{% endblock %}

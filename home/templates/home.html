@@ -1,0 +1,49 @@
+{% extends 'base_home.html' %}
+{% load static %}
+
+{% block title %}Home - {{ project_name }}{% endblock %}
+
+{% block content %}
+<!-- Hero Section do Preline UI -->
+{# Esta div externa mantém o padding px-4 sm:px-6 lg:px-8, conforme o layout atual. #}
+<div class="px-4 sm:px-6 lg:px-8">
+  {# Esta div interna tem a altura e as classes de fundo. #}
+  {# Adicionado sm:-mb-px: Esta classe aplica uma margem inferior de -1 pixel APENAS em telas pequenas e médias (sm e md). #}
+  {# Isso garante que a imagem preenche completamente o espaço na parte inferior, cobrindo a faixa branca. #}
+  {# Em telas grandes (lg e acima), esta classe não terá efeito significativo, mantendo o layout OK. #}
+  <div class="h-120 md:h-[80dvh] flex flex-col hero-background-image bg-cover bg-center bg-no-repeat rounded-2xl sm:-mb-px">
+    <div class="mt-auto w-2/3 md:max-w-lg ps-5 pb-5 md:ps-10 md:pb-10">
+      {% if user.is_authenticated %}
+        {# Se o usuário estiver logado #}
+        <h1 class="text-3xl md:text-5xl lg:text-6xl text-vermelho1 permanent-marker-regular"> {# Ajustado para text-3xl em telas pequenas #}
+          Seja bem vindo(a) {{ user.username }}!
+        </h1>
+        <br>
+        <div class="bg-transparent flex space-x-4">
+          {# Botão para Dashboard #}
+          <a href="{% url 'accounts:dashboard' %}" class="bg-roxo1 hover:bg-roxo2-hover text-white py-2 px-4 rounded-lg font-sans cursor-pointer">
+            Meu painel
+          </a>
+        </div>
+      {% else %}
+        {# Se o usuário NÃO estiver logado #}
+        <h1 class="text-3xl md:text-5xl lg:text-6xl text-vermelho1 permanent-marker-regular"> {# Ajustado para text-3xl em telas pequenas #}
+          Seja bem vindo(a)!!
+        </h1>
+        <br>
+        <div class="bg-transparent flex space-x-4">
+          {# Botão Cadastro com link correto #}
+          <a href="{% url 'accounts:register' %}" class="bg-roxo1 hover:bg-roxo2-hover text-white py-2 px-4 rounded-lg font-sans cursor-pointer">
+            Cadastro
+          </a>
+          {# Botão Login com link correto #}
+          <a href="{% url 'accounts:login' %}" class="bg-laranja1 hover:bg-laranja2-hover text-white py-2 px-4 rounded-lg font-sans cursor-pointer">
+            Login
+          </a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<!-- Fim da Hero Section -->
+{% endblock %}

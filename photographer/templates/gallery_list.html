@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Minhas Galerias - Painel do Fotógrafo - {{ project_name }}{% endblock %}
+
+{% block content %}
+<div class="bg-white p-6 rounded-lg shadow-md">
+    <div class="flex flex-col sm:flex-row justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800 mb-4 sm:mb-0">Minhas Galerias</h1>
+        <a href="{% url 'photographer:gallery_create' %}" class="px-6 py-3 bg-green-600 text-white rounded-lg shadow-lg hover:bg-green-700 transition duration-300 transform hover:scale-105">
+            Criar Nova Galeria
+        </a>
+    </div>
+
+    <!-- Seção de Filtros por Data e Status Público -->
+    <div class="bg-gray-100 p-6 rounded-lg shadow-md mb-8">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Filtrar Galerias</h2>
+        <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+            {# Filtro por Data de Início #}
+            <div>
+                <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">Data de Início:</label>
+                <input type="date" id="start_date" name="start_date"
+                       value="{{ filtered_start_date }}"
+                       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+            {# Filtro por Data de Fim #}
+            <div>
+                <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">Data de Fim:</label>
+                <input type="date" id="end_date" name="end_date"
+                       value="{{ filtered_end_date }}"
+                       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+            {# Novo Filtro por Status Público #}
+            <div>
+                <label for="is_public" class="block text-sm font-medium text-gray-700 mb-1">Status Público:</label>
+                <select id="is_public" name="is_public"
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    <option value="">Todas</option> {# Opção para exibir todas as galerias #}
+                    <option value="true" {% if filtered_is_public == 'true' %}selected{% endif %}>Sim</option>
+                    <option value="false" {% if filtered_is_public == 'false' %}selected{% endif %}>Não</option>
+                </select>
+            </div>
+            {# Botões de Ação para Filtros #}
+            <div class="flex flex-col sm:flex-row gap-4 lg:col-span-1">
+                <button type="submit" class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-300">
+                    Aplicar Filtros
+                </button>
+                {# Botão para limpar todos os filtros #}
+                {% if filtered_start_date or filtered_end_date or filtered_is_public %}
+                    <a href="{% url 'photographer:gallery_list' %}" class="w-full sm:w-auto px-4 py-2 bg-gray-500 text-white rounded-md shadow-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 text-center transition duration-300">
+                        Limpar Filtros
+                    </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    {% if galleries %}
+    <div class="overflow-x-auto">
+        <table class="min-w-full bg-white border border-gray-200 rounded-lg sm:table w-full">
+            <thead class="hidden sm:table-header-group bg-gray-100">
+                <tr>
+                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider border-b">Título</th>
+                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider border-b">Data do Evento</th>
+                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider border-b">Pública?</th>
+                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider border-b">Imagens</th>
+                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider border-b">Ações</th>
+                </tr>
+            </thead>
+            <tbody class="block sm:table-row-group">
+                {% for gallery in galleries %}
+                <tr class="block sm:table-row border-b border-gray-200 hover:bg-gray-50 transition duration-150 ease-in-out mb-4 sm:mb-0">
+                    <td class="py-2 px-4 block sm:table-cell before:content-['Título:'] before:font-semibold before:block sm:before:hidden text-gray-800 font-medium">{{ gallery.name }}</td>
+                    <td class="py-2 px-4 block sm:table-cell before:content-['Data_do_Evento:'] before:font-semibold before:block sm:before:hidden text-gray-700">{{ gallery.event_date|date:"d/m/Y" }}</td>
+                    <td class="py-2 px-4 block sm:table-cell before:content-['Pública?:'] before:font-semibold before:block sm:before:hidden text-gray-700">
+                        {% if gallery.is_public %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Sim</span>
+                        {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Não</span>
+                        {% endif %}
+                    </td>
+                    <td class="py-2 px-4 block sm:table-cell before:content-['Imagens:'] before:font-semibold before:block sm:before:hidden text-gray-700">{{ gallery.images.count }}</td>
+                    <td class="py-2 px-4 block sm:table-cell">
+                        <div class="flex flex-wrap gap-2 justify-end sm:justify-start"> {# Ajustado para flex-wrap e gap #}
+                            <a href="{% url 'photographer:gallery_detail' gallery.pk %}" class="px-4 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition duration-300">Ver</a>
+                            <a href="{% url 'photographer:gallery_edit' gallery.pk %}" class="px-4 py-2 bg-yellow-500 text-white text-sm rounded-lg hover:bg-yellow-600 transition duration-300">Editar</a>
+                            <a href="{% url 'photographer:gallery_delete' gallery.pk %}" class="px-4 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 transition duration-300">Excluir</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {# Paginação #}
+    {% if is_paginated %}
+    <div class="flex justify-center mt-8">
+        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+            {% if page_obj.has_previous %}
+                {# Adiciona os parâmetros de filtro à URL da paginação #}
+                <a href="?page={{ page_obj.previous_page_number }}{% if filtered_start_date %}&start_date={{ filtered_start_date }}{% endif %}{% if filtered_end_date %}&end_date={{ filtered_end_date }}{% endif %}{% if filtered_is_public %}&is_public={{ filtered_is_public }}{% endif %}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    <span class="sr-only">Anterior</span>
+                    <!-- Heroicon name: solid/chevron-left -->
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+            {% endif %}
+
+            {% for i in paginator.page_range %}
+                {# Adiciona os parâmetros de filtro à URL da paginação #}
+                <a href="?page={{ i }}{% if filtered_start_date %}&start_date={{ filtered_start_date }}{% endif %}{% if filtered_end_date %}&end_date={{ filtered_end_date }}{% endif %}{% if filtered_is_public %}&is_public={{ filtered_is_public }}{% endif %}" class="{% if page_obj.number == i %}z-10 bg-blue-600 text-white{% else %}bg-white border-gray-300 text-gray-700 hover:bg-gray-50{% endif %} relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                    {{ i }}
+                </a>
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                {# Adiciona os parâmetros de filtro à URL da paginação #}
+                <a href="?page={{ page_obj.next_page_number }}{% if filtered_start_date %}&start_date={{ filtered_start_date }}{% endif %}{% if filtered_end_date %}&end_date={{ filtered_end_date }}{% endif %}{% if filtered_is_public %}&is_public={{ filtered_is_public }}{% endif %}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    <span class="sr-only">Próxima</span>
+                    <!-- Heroicon name: solid/chevron-right -->
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center py-10 text-gray-600">
+        <p class="text-lg mb-4">Você ainda não criou nenhuma galeria.</p>
+        <a href="{% url 'photographer:gallery_create' %}" class="px-6 py-3 bg-green-600 text-white rounded-lg shadow-lg hover:bg-green-700 transition duration-300 transform hover:scale-105">
+            Criar Minha Primeira Galeria
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock%}

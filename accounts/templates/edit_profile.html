@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Editar Perfil - {{ project_name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-4xl font-bold text-roxo1 mb-8 text-center">Editar Meu Perfil</h1>
+
+    {% if messages %}
+        <div class="mb-4">
+            {% for message in messages %}
+                <div class="p-3 rounded-lg {% if message.tags == 'success' %}bg-green-100 text-green-800{% elif message.tags == 'error' %}bg-red-100 text-red-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {# O contêiner principal do formulário e da zona de perigo, agora com flexbox para espaçamento vertical #}
+    <div class="bg-prata1 p-6 rounded-lg shadow-md mb-8 flex flex-col space-y-8">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-8">
+                {# Coluna 1: Avatar e Informações da Conta #}
+                <div class="flex flex-col items-center text-center">
+                    <h2 class="text-2xl font-semibold text-roxo1 mb-4">Minhas Informações</h2>
+                    {# Foto de Perfil - Sistema de Avatar Padronizado para Edição #}
+                    <div class="mb-4">
+                        <label for="{{ profile_form.profile_picture.id_for_label }}" class="block text-sm font-medium text-preto1 mb-1">Foto de Perfil:</label>
+                        {% if user.profile.profile_picture %}
+                            {# Se tem foto, usa a imagem com o "anel" #}
+                            <img class="w-32 h-32 p-1 rounded-full ring-2 ring-gray-300 dark:ring-gray-500 object-cover mx-auto cursor-pointer"
+                                 src="{{ user.profile.profile_picture.url }}"
+                                 alt="Foto de Perfil"
+                                 onclick="document.getElementById('{{ profile_form.profile_picture.id_for_label }}').click();">
+                        {% else %}
+                            {# Se não tem foto, usa as iniciais com o "anel" e padding #}
+                            <div class="relative inline-flex items-center justify-center w-32 h-32 overflow-hidden bg-gray-100 rounded-full dark:bg-gray-600 ring-2 ring-gray-300 dark:ring-gray-500 mx-auto p-1 cursor-pointer"
+                                 onclick="document.getElementById('{{ profile_form.profile_picture.id_for_label }}').click();">
+                                <span class="font-medium text-gray-600 dark:text-gray-300 text-5xl">
+                                    {{ user.username|first|upper }}
+                                </span>
+                            </div>
+                        {% endif %}
+                        {# O input real do arquivo, agora VISÍVEL e estilizado pelo forms.py #}
+                        <div class="mt-2"> {# Adicionado margin-top para espaçamento #}
+                            {{ profile_form.profile_picture }}
+                        </div>
+                        {% if profile_form.profile_picture.errors %}
+                            <p class="text-red-500 text-xs italic mt-1">{{ profile_form.profile_picture.errors }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="space-y-4 w-full text-left">
+                        <div>
+                            <label class="block text-sm font-medium text-preto1">Nome de Usuário:</label>
+                            {# Exibe o nome de usuário como texto não editável, com estilo de input #}
+                            <p class="mt-1 text-lg text-preto1 font-bold px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100">{{ user.username }}</p>
+                            <p class="text-xs text-cinza1">Nome de usuário não pode ser alterado aqui.</p>
+                        </div>
+                        {% for field in user_form %}
+                            <div class="mb-4">
+                                <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-preto1 mb-1">{{ field.label }}:</label>
+                                {{ field }}
+                                {% if field.help_text %}
+                                    <p class="text-xs text-cinza1 mt-1">{{ field.help_text }}</p>
+                                {% endif %}
+                                {% for error in field.errors %}
+                                    <p class="text-red-500 text-xs italic">{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                {# Coluna 2: Detalhes do Perfil #}
+                <div class="lg:col-span-1">
+                    <h2 class="text-2xl font-semibold text-roxo1 mb-4">Detalhes do Perfil</h2>
+                    <div class="space-y-4">
+                        {% for field in profile_form %}
+                            {# Ignorar o campo profile_picture aqui, pois já foi renderizado na coluna 1 #}
+                            {% if field.name != 'profile_picture' %}
+                                <div class="mb-4">
+                                    <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-preto1 mb-1">{{ field.label }}:</label>
+                                    {{ field }}
+                                    {% if field.help_text %}
+                                        <p class="text-xs text-cinza1 mt-1">{{ field.help_text }}</p>
+                                    {% endif %}
+                                    {% for error in field.errors %}
+                                        <p class="text-red-500 text-xs italic">{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                {# Coluna 3: Botões de Ação - Ajustado para garantir espaçamento #}
+                <div class="flex items-center justify-center p-6 lg:col-span-1">
+                    <div class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 w-full">
+                        <button type="submit" class="px-8 py-3 bg-roxo2 text-branco1 rounded-lg shadow-md hover:bg-roxo1 transition duration-300 text-lg w-full sm:w-auto">
+                            Salvar Alterações
+                        </button>
+                        <a href="{% url 'accounts:profile' %}" class="px-8 py-3 bg-cinza1 text-branco1 rounded-lg shadow-md hover:bg-gray-600 transition duration-300 text-lg w-full sm:w-auto">
+                            Cancelar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form> {# O formulário termina aqui #}
+
+        {# A seção de Zona de Perigo, agora com espaçamento gerenciado pelo pai e botão ajustado #}
+        <div class="bg-red-100 p-6 rounded-lg shadow-md border border-red-300"> {# Removido mt-8 daqui #}
+            <h2 class="text-2xl font-semibold text-red-700 mb-4 text-center">Zona de Perigo</h2>
+            <p class="text-preto1 mb-4 text-center">
+                Se você deseja excluir permanentemente sua conta e todos os seus dados, clique no botão abaixo.
+            </p>
+            <div class="text-center">
+                {# BOTÃO EXCLUIR CONTA: Adicionado max-w-xs e mx-auto para controlar o tamanho em telas pequenas #}
+                <a href="{% url 'accounts:delete_account' %}" class="px-8 py-3 bg-red-600 text-white rounded-lg shadow-md hover:bg-red-700 transition duration-300 text-lg max-w-xs mx-auto block">
+                    Excluir Conta
+                </a>
+            </div>
+        </div>
+    </div> {# Fim do bg-prata1 que envolve o formulário e a zona de perigo #}
+</div>
+{% endblock %}

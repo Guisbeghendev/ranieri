@@ -1,0 +1,166 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ project_name }}{% endblock %}</title>
+    {# Caminho para seu CSS compilado do Tailwind #}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        /* Estilos para o fundo animado de gradiente - Adaptado para CSS puro */
+        .animated-bg {
+            background: linear-gradient(
+                270deg,
+                #c89c20, /* laranja 1 */
+                #cd862a, /* laranja 2 */
+                #c9583e, /* laranja 3 */
+                #61152d, /* roxo 1 */
+                #681630  /* roxo 2 */
+            );
+            background-size: 1000% 1000%;
+            animation: bgGradientMove 30s ease infinite;
+        }
+
+        @keyframes bgGradientMove {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* --- NOVA SOMBRA AINDA MAIS PROEMINENTE --- */
+        /* Dobrada a intensidade da sombra anterior */
+        .custom-super-strong-shadow {
+            box-shadow: 0 50px 100px -24px rgba(0, 0, 0, 0.8); /* Dobrada a sombra */
+        }
+
+        /* Estilos para o Message Box Personalizado */
+        .message-box-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            width: 90%;
+            max-width: 400px;
+            display: none; /* Escondido por padrão */
+        }
+        .message-box {
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .message-box.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .message-box.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .message-box.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .message-box-close {
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-left: 1rem;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen animated-bg">
+
+    <!-- Message Box Container -->
+    <div id="custom-message-box-container" class="message-box-container">
+        <div id="custom-message-box" class="message-box">
+            <span id="custom-message-text"></span>
+            <span class="message-box-close" onclick="hideMessageBox()">&times;</span>
+        </div>
+    </div>
+
+    <div>
+        {% include 'includes/navbar_content.html' %}
+    </div>
+
+    {# CORRIGIDO AQUI: Mantido 'flex-grow' e 'p-8', e adicionado 'flex' e 'justify-center' para centralizar horizontalmente. Removido 'items-start' para permitir que a altura se ajuste ao conteúdo. #}
+    <main class="flex-grow flex justify-center p-8"> {# p-8 para espaçamento geral ao redor do conteúdo #}
+        {# A div interna (o "cartão branco") não tem mais classes de padding ou margem externas. #}
+        {# Ela se expandirá naturalmente para envolver o conteúdo e o padding que o conteúdo tiver. #}
+        <div class="w-full bg-white bg-opacity-90 rounded-2xl custom-super-strong-shadow max-w-6xl dark:bg-gray-800 dark:bg-opacity-90">
+            {% block page_title %}
+                {# Se a página filha definir um título, ele virá aqui #}
+            {% endblock %}
+
+            {% block content %}
+            {% endblock %}
+        </div>
+    </main>
+
+    <div>
+        {% include 'includes/footer_content.html' %}
+    </div>
+
+    {# Adicione o script do Preline UI aqui, antes do fechamento do /body #}
+    <script src="https://unpkg.com/preline@1.x/dist/preline.js"></script>
+
+    <script>
+        // Funções JavaScript para o Message Box Personalizado
+        function showMessageBox(message, type = 'info', duration = 5000) {
+            const container = document.getElementById('custom-message-box-container');
+            const box = document.getElementById('custom-message-box');
+            const text = document.getElementById('custom-message-text');
+
+            // Limpa classes de tipo anteriores
+            box.classList.remove('success', 'error', 'info', 'warning');
+
+            // Adiciona a nova classe de tipo
+            box.classList.add(type);
+            text.textContent = message;
+            container.style.display = 'block';
+
+            // Esconde a mensagem após um tempo, se a duração for especificada
+            if (duration > 0) {
+                setTimeout(() => {
+                    hideMessageBox();
+                }, duration);
+            }
+        }
+
+        function hideMessageBox() {
+            const container = document.getElementById('custom-message-box-container');
+            container.style.display = 'none';
+        }
+
+        // Exibir mensagens Django automaticamente
+        document.addEventListener('DOMContentLoaded', () => {
+            const djangoMessages = document.querySelectorAll('.messages li');
+            if (djangoMessages.length > 0) {
+                djangoMessages.forEach(msg => {
+                    const type = msg.classList.contains('success') ? 'success' :
+                                 msg.classList.contains('error') ? 'error' :
+                                 msg.classList.contains('warning') ? 'warning' : 'info';
+                    // Exibe cada mensagem Django usando o novo message box
+                    showMessageBox(msg.textContent.trim(), type);
+                });
+                // Opcional: Remover as mensagens Django originais da DOM se o novo sistema for preferido
+                // document.querySelector('.messages').remove();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Meus Grupos de Galerias - {{ project_name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-4xl font-bold text-roxo1 mb-8 text-center">Meus Grupos de Galerias</h1>
+
+    {% if audience_groups %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {% for group in audience_groups %}
+                <div class="bg-prata1 border border-gray-200 rounded-lg overflow-hidden shadow-sm p-6 flex flex-col items-center justify-center text-center transform hover:scale-105 transition duration-300">
+                    <h3 class="text-2xl font-semibold text-roxo1 mb-4">{{ group.name }}</h3>
+                    <p class="text-preto1 mb-6">Explore as galerias deste grupo.</p>
+                    {# O link abaixo aponta para a próxima página no fluxo: a lista de galerias de um grupo específico #}
+                    <a href="{% url 'galleries:client_gallery_list' group_pk=group.pk %}" class="px-6 py-3 bg-laranja3 text-preto1 rounded-lg shadow-md hover:bg-laranja2 transition duration-300 w-full sm:w-auto text-center">
+                        Ver Galerias
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+
+        {# Paginação #}
+        {% if is_paginated %}
+        <div class="flex justify-center mt-8">
+            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <span class="sr-only">Anterior</span>
+                        <!-- Heroicon name: solid/chevron-left -->
+                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                    </a>
+                {% endif %}
+
+                {% for i in paginator.page_range %}
+                    <a href="?page={{ i }}" class="{% if page_obj.number == i %}z-10 bg-laranja1 text-white{% else %}bg-white border-gray-300 text-gray-700 hover:bg-gray-50{% endif %} relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                        {{ i }}
+                    </a>
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <span class="sr-only">Próxima</span>
+                        <!-- Heroicon name: solid/chevron-right -->
+                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                        </svg>
+                    </a>
+                {% endif %}
+            </nav>
+        </div>
+        {% endif %}
+
+    {% else %}
+        <p class="text-preto1 text-center py-8 text-lg bg-prata1 rounded-lg shadow-sm">
+            Você ainda não está associado(a) a nenhum grupo de galerias privadas.
+            <br>Entre em contato com o fotógrafo para ter acesso.
+        </p>
+    {% endif %}
+</div>
+{% endblock %}

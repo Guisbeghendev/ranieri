@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Grêmio - {{ project_name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-roxo2 dark:text-roxo2-hover font-extrabold tracking-tight text-4xl lg:text-5xl drop-shadow-md text-center mb-8">
+        Grêmio
+    </h1>
+
+    {# Ajustado o padding para ser mais flexível e largura máxima para max-w-4xl #}
+    <div class="py-12 px-2 sm:px-4 lg:px-6 max-w-4xl mx-auto">
+        {# Removido estilos de "card" para evitar card dentro de card, mantendo o padding interno e centralização do texto #}
+        <div class="p-4 md:p-6 lg:p-8 text-center">
+            <h2 class="text-3xl sm:text-4xl font-extrabold text-roxo2 dark:text-roxo2-hover mb-6 leading-tight drop-shadow-sm">
+                Em Breve: Grêmio!
+            </h2>
+            <p class="text-gray-700 dark:text-gray-300 leading-relaxed text-lg mb-8">
+                Estamos trabalhando para construir a página do Grêmio,
+                um espaço dedicado aos alunos da nossa escola.
+            </p>
+            <p class="text-gray-700 dark:text-gray-300 leading-relaxed text-lg">
+                Fique atento para novidades sobre eventos, notícias e como se engajar!
+            </p>
+
+            <div class="mt-8">
+                <img src="https://placehold.co/600x350/AED6F1/2E86C1?text=PAGINA+EM+CONSTRUCAO"
+                     alt="Página em construção"
+                     class="mx-auto rounded-2xl shadow-md w-full max-w-full h-auto" {# Ajustado para w-full e max-w-full para melhor responsividade #}
+                     onerror="this.onerror=null;this.src='https://placehold.co/600x350/cccccc/000000?text=Imagem+Nao+Disponivel';">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

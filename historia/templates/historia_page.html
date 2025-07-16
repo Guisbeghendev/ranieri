@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sobre a Escola - {{ project_name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-laranja2 dark:text-laranja1-hover font-extrabold tracking-tight text-4xl lg:text-5xl drop-shadow-md text-center mb-8">
+        Sobre a Escola
+    </h1>
+
+    <div class="py-12 px-2 sm:px-4 lg:px-6 w-full mx-auto">
+        <div class="p-4 md:p-6 lg:p-8">
+            <h2 id="chapter-title" class="text-3xl sm:text-4xl font-extrabold text-roxo2 dark:text-roxo2-hover mb-6 text-center leading-tight drop-shadow-sm">
+                Carregando a História da Escola...
+            </h2>
+
+            <div id="chapter-content" class="text-gray-700 dark:text-gray-300 leading-relaxed text-lg mb-8 prose dark:prose-invert">
+                <p class="text-center text-gray-500 dark:text-gray-400 italic">Aguarde enquanto carregamos os capítulos da história. Se a página não carregar, por favor, tente recarregar.</p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-between items-center mt-8 pt-4 border-t border-gray-200 dark:border-gray-700 gap-4">
+                <button
+                    id="prev-button"
+                    class="px-8 py-3 w-full sm:w-auto
+                           bg-roxo2 text-white font-bold rounded-full
+                           shadow-lg hover:bg-roxo1-hover
+                           disabled:bg-gray-300 dark:disabled:bg-gray-700
+                           disabled:text-gray-500 dark:disabled:text-gray-400
+                           disabled:cursor-not-allowed
+                           transition duration-300 ease-in-out transform hover:scale-105 active:scale-95
+                           focus:outline-none focus:ring-2 focus:ring-roxo2-focus focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                >
+                    Anterior
+                </button>
+
+                <span id="chapter-pagination" class="text-gray-600 dark:text-gray-400 text-base sm:text-lg font-semibold whitespace-nowrap">
+                    Capítulo 0 de 0
+                </span>
+
+                <button
+                    id="next-button"
+                    class="px-8 py-3 w-full sm:w-auto
+                           bg-laranja2 text-preto1 font-bold rounded-full
+                           shadow-lg hover:bg-laranja1-hover
+                           disabled:bg-gray-300 dark:disabled:bg-gray-700
+                           disabled:text-gray-500 dark:disabled:text-gray-400
+                           disabled:cursor-not-allowed
+                           transition duration-300 ease-in-out transform hover:scale-105 active:scale-95
+                           focus:outline-none focus:ring-2 focus:ring-laranja1-focus focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                >
+                    Próximo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const chapterFilenames = JSON.parse('{{ chapter_filenames_json|escapejs }}');
+        let chapters = [];
+        let currentPage = 0;
+
+        const chapterTitleElement = document.getElementById('chapter-title');
+        const chapterContentElement = document.getElementById('chapter-content');
+        const chapterPaginationElement = document.getElementById('chapter-pagination');
+        const prevButton = document.getElementById('prev-button');
+        const nextButton = document.getElementById('next-button');
+
+        async function loadChapters() {
+            console.log('[Historia Page] Iniciando carregamento de capítulos dinamicamente...');
+            const loaded = [];
+            for (const filename of chapterFilenames) {
+                try {
+                    // CORRIGIDO: Caminho estático agora inclui o namespace 'historia/'
+                    const response = await fetch(`{% static 'historia/chapters/' %}${filename}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const chapterData = await response.json();
+                    if (chapterData && typeof chapterData === 'object' && chapterData !== null) {
+                        loaded.push(chapterData);
+                        console.log(`[Historia Page] Capítulo carregado: ${filename}`);
+                    } else {
+                        console.warn(`[Historia Page] Pulando capítulo malformado ou vazio: ${filename}`);
+                    }
+                } catch (e) {
+                    console.error(`[Historia Page] Erro ao carregar o capítulo ${filename}:`, e);
+                }
+            }
+
+            if (loaded.length > 0) {
+                loaded.sort((a, b) => {
+                    const numA = parseInt(a.title.match(/Capítulo (\d+)/)?.[1] || 0);
+                    const numB = parseInt(b.title.match(/Capítulo (\d+)/)?.[1] || 0);
+                    return numA - numB;
+                });
+            }
+            chapters = loaded;
+            console.log('[Historia Page] Número total de capítulos carregados e ordenados:', chapters.length);
+            updateChapterDisplay();
+        }
+
+        function updateChapterDisplay() {
+            if (chapters.length > 0 && currentPage < chapters.length) {
+                const currentChapter = chapters[currentPage];
+                chapterTitleElement.textContent = currentChapter.title;
+                chapterContentElement.innerHTML = currentChapter.content;
+                chapterPaginationElement.textContent = `Capítulo ${currentPage + 1} de ${chapters.length}`;
+            } else {
+                chapterTitleElement.textContent = 'Nenhum Capítulo Encontrado';
+                chapterContentElement.innerHTML = '<p class="text-center text-gray-500 dark:text-gray-400 italic">Parece que não há capítulos da história para exibir no momento.</p>';
+                chapterPaginationElement.textContent = 'Capítulo 0 de 0';
+            }
+            updateButtonStates();
+        }
+
+        function updateButtonStates() {
+            prevButton.disabled = currentPage === 0;
+            nextButton.disabled = currentPage === chapters.length - 1;
+        }
+
+        prevButton.addEventListener('click', () => {
+            if (currentPage > 0) {
+                currentPage--;
+                updateChapterDisplay();
+            }
+        });
+
+        nextButton.addEventListener('click', () => {
+            if (currentPage < chapters.length - 1) {
+                currentPage++;
+                updateChapterDisplay();
+            }
+        });
+
+        loadChapters();
+    });
+</script>
+{% endblock %}

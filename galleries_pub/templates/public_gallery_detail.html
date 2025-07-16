@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ gallery.name }} - Detalhes - {{ project_name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-prata1 p-6 rounded-lg shadow-md mb-8">
+        <h1 class="text-4xl font-bold text-roxo1 mb-4 text-center">{{ gallery.name }}</h1>
+        <p class="text-preto1 text-center mb-6">{{ gallery.description|default:"Nenhuma descrição disponível." }}</p>
+
+        {# Data do Evento com destaque #}
+        <p class="text-cinza1 text-center mb-4 text-lg font-semibold">Data do Evento: {{ gallery.event_date|date:"d/m/Y" }}</p>
+
+        {# Informações de criação e atualização sem destaque #}
+        <p class="text-cinza1 text-center text-sm">
+            Criado em: {{ gallery.created_at|date:"d/m/Y H:i" }} | Última atualização: {{ gallery.updated_at|date:"d/m/Y H:i" }}
+        </p>
+    </div>
+
+    <div class="text-center mb-8">
+        <a href="{% url 'public_galleries:public_gallery_list' %}" class="px-6 py-3 bg-roxo2 text-branco1 rounded-lg shadow-md hover:bg-roxo1 transition duration-300 w-full sm:w-auto text-center inline-flex items-center justify-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            <span class="hidden sm:inline">&larr; Voltar para as Galerias Públicas</span>
+            <span class="inline sm:hidden">&larr; Voltar</span>
+        </a>
+    </div>
+
+    {% if images %}
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 image-grid">
+            {% for image in images %}
+                <a class="group block relative overflow-hidden rounded-lg cursor-pointer transform hover:scale-105 transition-transform duration-300 ease-in-out"
+                   {# Adicionando data-image-url e data-index para o JS de navegação #}
+                   data-image-url="{% if image.image_file_watermarked %}{{ image.image_file_watermarked.url }}{% elif image.image_file_original %}{{ image.image_file_original.url }}{% else %}https://placehold.co/800x600/e0e0e0/555555?text=Imagem+Nao+Disponivel{% endif %}" {# CORRIGIDO #}
+                   data-index="{{ forloop.counter0 }}"
+                   onclick="openModal(this)">
+
+                    {# Imagem da galeria - usa thumbnail #}
+                    <img class="w-full h-40 object-cover bg-prata1 rounded-lg border border-gray-200"
+                         src="{% if image.image_file_thumb %}{{ image.image_file_thumb.url }}{% elif image.image_file_original %}{{ image.image_file_original.url }}{% else %}https://placehold.co/400x300/e0e0e0/555555?text=Sem+Imagem{% endif %}" {# CORRIGIDO #}
+                         alt="{{ gallery.name }} - Imagem {{ forloop.counter }}"
+                         loading="lazy">
+
+                    {# Overlay de "View" ao passar o mouse #}
+                    <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div class="flex items-center gap-x-1 py-1 px-2 bg-white border border-gray-200 text-gray-800 rounded-lg">
+                            <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                            <span class="text-sm font-medium">Ver Imagem</span>
+                        </div>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+
+    {% else %}
+        {# Mensagem exibida se não houver imagens na galeria #}
+        <p class="text-preto1 text-center py-8 text-lg bg-prata1 rounded-lg shadow-sm">
+            <span class="font-bold">Ops!</span> Nenhuma imagem disponível para esta galeria ainda.
+            <br>Por favor, verifique novamente mais tarde ou entre em contato com o fotógrafo.
+        </p>
+    {% endif %}
+</div>
+
+<div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50 hidden p-4">
+    <div class="relative max-w-4xl max-h-[90vh] mx-auto bg-white rounded-lg shadow-xl overflow-hidden">
+        {# Botão de Fechar o modal #}
+        <button class="absolute top-3 right-3 text-white bg-gray-800 rounded-full p-2 text-2xl font-bold z-10 hover:bg-gray-600 transition-colors duration-200" onclick="closeModal()" aria-label="Fechar Imagem">
+            &times;
+        </button>
+
+        {# Botão Anterior - Adicionado com posicionamento central #}
+        <button id="prevBtn" class="absolute left-3 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white p-3 rounded-full text-2xl z-10 hover:bg-gray-600 transition-colors duration-200" onclick="showPreviousImage()" aria-label="Imagem Anterior">
+            &#10094;
+        </button>
+
+        {# Botão Próxima - Adicionado com posicionamento central #}
+        <button id="nextBtn" class="absolute right-3 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white p-3 rounded-full text-2xl z-10 hover:bg-gray-600 transition-colors duration-200" onclick="showNextImage()" aria-label="Próxima Imagem">
+            &#10095;
+        </button>
+
+        {# Imagem Principal do Modal #}
+        <img id="modalImage" src="" alt="Imagem em destaque da galeria" class="max-w-full max-h-[80vh] object-contain mx-auto block rounded-t-lg">
+
+        {# Legenda da imagem no modal (Agora opcional) #}
+        <div id="modalCaption" class="bg-gray-800 text-white text-center py-2 px-4 text-sm hidden">
+            Legenda da Imagem
+        </div>
+    </div>
+</div>
+
+{# Botão "Voltar ao Topo" #}
+<button id="backToTopBtn" class="fixed bottom-8 right-8 bg-roxo2 text-branco1 p-3 rounded-full shadow-lg hover:bg-roxo1 transition-colors duration-300 hidden" aria-label="Voltar ao Topo">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+</button>
+
+<script>
+    let currentImageIndex = 0;
+    let imageUrls = []; // Array para armazenar as URLs de todas as imagens
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Popula o array imageUrls e adiciona a classe 'image-grid' para facilitar a seleção
+        const imageLinks = document.querySelectorAll('.image-grid a');
+        imageLinks.forEach(link => {
+            imageUrls.push(link.getAttribute('data-image-url'));
+        });
+
+        // Esconde a legenda se estiver vazia (opcional, já estava no seu código)
+        const modalCaption = document.getElementById('modalCaption');
+        if (modalCaption && modalCaption.innerText.trim() === '') {
+            modalCaption.classList.add('hidden');
+        }
+    });
+
+    // Função para abrir o modal e iniciar a navegação (agora aceita o elemento clicado)
+    function openModal(clickedElement) {
+        currentImageIndex = parseInt(clickedElement.dataset.index);
+        updateModalImage(); // Atualiza a imagem e o estado dos botões
+
+        document.getElementById('imageModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden'; // Impede o scroll do body quando o modal está aberto
+    }
+
+    // Função para atualizar a imagem no modal e o estado dos botões
+    function updateModalImage() {
+        const modalImage = document.getElementById('modalImage');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const modalCaption = document.getElementById('modalCaption');
+
+        modalImage.src = imageUrls[currentImageIndex];
+
+        // Nota: O seu código anterior para 'public_gallery_detail' não incluía legendas detalhadas.
+        // Se você precisar de legendas específicas para cada imagem, precisará adicionar 'data-caption' aos links da galeria.
+        // Por enquanto, a legenda no modal será genérica ou vazia, dependendo de como você a alimenta.
+
+        // Habilita/desabilita botões de navegação
+        prevBtn.style.display = (currentImageIndex === 0) ? 'none' : 'block';
+        nextBtn.style.display = (currentImageIndex === imageUrls.length - 1) ? 'none' : 'block';
+    }
+
+    // Função para mostrar a próxima imagem
+    function showNextImage() {
+        if (currentImageIndex < imageUrls.length - 1) {
+            currentImageIndex++;
+            updateModalImage();
+        }
+    }
+
+    // Função para mostrar a imagem anterior
+    function showPreviousImage() {
+        if (currentImageIndex > 0) {
+            currentImageIndex--;
+            updateModalImage();
+        }
+    }
+
+    // Função para fechar o modal
+    function closeModal() {
+        document.getElementById('imageModal').classList.add('hidden');
+        document.getElementById('modalImage').src = ''; // Limpa a imagem ao fechar
+        document.body.style.overflow = ''; // Restaura o scroll do body
+    }
+
+    // Fechar modal ao clicar fora da imagem (mas dentro do modal)
+    document.getElementById('imageModal').addEventListener('click', function(event) {
+        // Permite fechar ao clicar no background ou na imagem, mas não nos botões de navegação.
+        if (event.target === this || event.target.tagName === 'IMG') {
+            closeModal();
+        }
+    });
+
+    // Fechar modal com a tecla ESC e navegar com setas do teclado
+    document.addEventListener('keydown', function(event) {
+        if (document.getElementById('imageModal').classList.contains('hidden')) {
+            return;
+        }
+        if (event.key === 'Escape') {
+            closeModal();
+        } else if (event.key === 'ArrowRight') {
+            showNextImage();
+        } else if (event.key === 'ArrowLeft') {
+            showPreviousImage();
+        }
+    });
+
+    // Lógica para o botão "Voltar ao Topo"
+    const backToTopBtn = document.getElementById('backToTopBtn');
+
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 300) {
+            backToTopBtn.classList.remove('hidden');
+        } else {
+            backToTopBtn.classList.add('hidden');
+        }
+    });
+
+    backToTopBtn.addEventListener('click', () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
+
+    // Adiciona um listener para garantir que o modal se redimensione com a janela
+    window.addEventListener('resize', () => {
+        // Nada específico para redimensionar aqui, pois o CSS já lida com max-width/height
+    });
+</script>
+{% endblock %}

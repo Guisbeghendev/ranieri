@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Excluir Conta - {{ project_name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-lg">
+    <h1 class="text-4xl font-bold text-red-600 mb-8 text-center">Excluir Minha Conta</h1>
+
+    {% if messages %}
+        <div class="mb-4">
+            {% for message in messages %}
+                <div class="p-3 rounded-lg {% if message.tags == 'success' %}bg-green-100 text-green-800{% elif message.tags == 'error' %}bg-red-100 text-red-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="bg-prata1 p-6 rounded-lg shadow-md text-preto1 text-center">
+        <p class="mb-4 text-lg">
+            Você tem certeza que deseja excluir a conta de **{{ user_to_delete.username }}**?
+        </p>
+        <p class="mb-6 text-red-700 font-semibold">
+            Esta ação é irreversível e todos os seus dados serão permanentemente removidos.
+        </p>
+
+        <form method="post" action="{% url 'accounts:delete_account' %}">
+            {% csrf_token %}
+            <div class="flex justify-center space-x-4">
+                <button type="submit" class="px-8 py-3 bg-red-600 text-white rounded-lg shadow-md hover:bg-red-700 transition duration-300 text-lg">
+                    Sim, Excluir Minha Conta
+                </button>
+                <a href="{% url 'accounts:edit_profile' %}" class="px-8 py-3 bg-cinza1 text-branco1 rounded-lg shadow-md hover:bg-gray-600 transition duration-300 text-lg">
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+bin/
+include/
+lib/
+lib64/
+share/
+*.egg-info/
+.pytest_cache/
+.coverage
+.mypy_cache/
+.ipynb_checkpoints
+.ruff_cache/
+
+# Django
+*.log
+*.sqlite3
+media/
+static_collected/ # Se você usa collectstatic para um diretório específico
+
+# Node.js (se houver)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp/
+.pnp.js
+
+# IDEs e Editores
+.idea/             # PyCharm
+.vscode/           # VS Code
+*.sublime-project
+*.sublime-workspace
+.DS_Store          # macOS
+Thumbs.db          # Windows
+
+# Variáveis de ambiente
+.env
+.flaskenv
+
+# Outros arquivos temporários ou gerados
+*.bak
+*.swp
+*~
+*.tmp

@@ -1,0 +1,60 @@
+/* ranieri_project/static/css/main.css */
+
+/*
+   CORREÇÃO PARA TAILWIND CSS V4.X.X:
+   Usando a importação direta do pacote principal do Tailwind.
+*/
+@import "tailwindcss"; /* Esta linha importa TODO o Tailwind (preflight, utilities, etc.) */
+
+/* --- SUAS CORES PERSONALIZADAS E TEMA SÃO DEFINIDAS AQUI PARA TAILWIND CSS V4.X.X --- */
+/*
+   Use a diretiva @theme para definir suas variáveis de cor personalizadas.
+   O Tailwind usará estas variáveis para gerar classes de utilidade (ex: bg-roxo1)
+   assim que você as usar em seus arquivos HTML.
+*/
+@theme {
+  --color-roxo1: #61152d;
+  --color-roxo2: #681630;
+  --color-laranja1: #c89c20;
+  --color-laranja2: #cd862a;
+  --color-laranja3: #c9583e;
+  --color-preto1: #0f0e0f;
+  --color-prata1: #d1d1d1;
+  --color-branco1: #f8f8f8;
+  --color-verde1: #2e5935;
+  --color-azul1: #1b365d;
+  --color-amarelo1: #c5a100;
+  --color-vermelho1: #9e1b1b;
+  --color-rosa1: #a54161;
+  --color-dourado1: #bfa14f;
+  --color-cinza1: #8a8a8a;
+
+  /*
+     As variações de hover/focus (ex: roxo1-hover) serão geradas automaticamente
+     pelo Tailwind a partir das suas cores base (ex: roxo1) assim que você usar
+     classes como `hover:bg-roxo1` em seus HTMLs.
+  */
+}
+
+/* --- CLASSE PARA A IMAGEM DE FUNDO DA HERO SECTION --- */
+/* O caminho da imagem é relativo à raiz do seu STATIC_URL, que é '/static/' */
+.hero-background-image {
+  background-image: url('/static/images/home_slide/slide1.jpg');
+}
+
+/* --- CLASSE PARA A FONTE PERMANENT MARKER COM FALLBACKS GROSSOS --- */
+.permanent-marker-regular {
+  font-family: "Permanent Marker", "Arial Black", "Impact", cursive;
+  font-weight: 400; /* O peso 400 é o padrão para Permanent Marker, mas os fallbacks serão grossos */
+  font-style: normal;
+}
+
+
+
+/* --- QUALQUER OUTRO CSS CUSTOMIZADO PODE SER ADICIONADO ABAIXO DESTAS DIRETIVAS --- */
+/* Exemplo de uma classe personalizada: */
+/*
+.meu-botao {
+  @apply bg-azul1 text-branco1 py-2 px-4 rounded-lg shadow-md;
+}
+*/

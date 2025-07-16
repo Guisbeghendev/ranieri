@@ -1,0 +1,4 @@
+{
+    "title": "Capítulo 2: O Logo do Coral",
+    "content": "<div class=\"flex justify-center my-6\"><img src=\"/static/coral/images/logo_coral.png\" alt=\"Logo do Coral Ranieri\" class=\"rounded-lg shadow-lg w-full max-w-sm h-auto\" onerror=\"this.onerror=null;this.src='https://placehold.co/100x100/cccccc/000000?text=Imagem+Nao+Encontrada';\"></div>"
+}
