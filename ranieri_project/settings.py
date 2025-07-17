@@ -78,6 +78,7 @@ FILE_UPLOAD_HANDLERS = (
 
 # Aumenta o limite de arquivos por upload (padrão é 1000)
 DATA_UPLOAD_MAX_NUMBER_FILES = 5000 # Aumentado para suportar mais de 500 imagens
+FILE_UPLOAD_MAX_MEMORY_SIZE = 2147483648 #2gb
 
 
 ROOT_URLCONF = 'ranieri_project.urls'
