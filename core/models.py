@@ -1,5 +1,5 @@
 import os
-from django.db import models, transaction  # Importa transaction
+from django.db import models, transaction
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.conf import settings
 from django.core.files.base import ContentFile
@@ -64,6 +64,10 @@ class User(AbstractUser):
         help_text='Os grupos de audiência aos quais este usuário pertence para acesso a conteúdo.'
     )
 
+    # CORREÇÃO: is_photographer agora é um campo BooleanField gravável.
+    # Isso permite que ele seja definido por um administrador ou pelo sinal.
+    is_photographer = models.BooleanField(default=False, verbose_name="É Fotógrafo?")
+
     class Meta(AbstractUser.Meta):
         swappable = 'AUTH_USER_MODEL'
         verbose_name = 'Usuário'
@@ -72,11 +76,10 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
-    # MÉTODO CORRIGIDO: Verifica se o usuário pertence ao grupo 'fotografo' OU é superusuário
-    @property
-    def is_photographer(self):
-        # Retorna True se for superusuário OU se pertencer ao grupo 'fotografo'
-        return self.is_superuser or self.groups.filter(name='fotografo').exists()
+    # O método @property is_photographer foi removido, pois agora é um campo gravável.
+    # A lógica de ser superusuário ou membro do grupo 'fotografo' agora será gerenciada
+    # pelo sinal 'update_user_flags_on_group_change' no core/signals.py,
+    # que irá definir este campo BooleanField.
 
 
 # --- Modelo AudienceGroup ---
@@ -238,4 +241,3 @@ class Image(models.Model):
         if is_new_image or (self.image_file_original and not self.image_file_thumb and not self.image_file_watermarked):
             transaction.on_commit(lambda: process_image_task.delay(self.pk))
             print(f"Disparada tarefa Celery para processar imagem {self.pk} (após commit da transação).")
-
