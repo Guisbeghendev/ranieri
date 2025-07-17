@@ -12,10 +12,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-s+1&_sn#vdu#u05^ldd4p21l3q-w!dx9@5u@a4s_)371q(=#^b'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['escolajoseranieri.com.br', 'www.escolajoseranieri.com.br', '77.37.68.104']
 
 # Application definition
 
@@ -115,7 +114,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'ranieri_db', # Nome do seu banco de dados MySQL
         'USER': 'root', # Seu usuário MySQL
-        'PASSWORD': 'Gsp@root', # Sua senha MySQL
+        'PASSWORD': 'Gsp@ranieri2025', # Sua senha MySQL
         'HOST': 'localhost', # Ou o IP do seu servidor MySQL ou 127.0.0.1
         'PORT': '3306', # Porta padrão do MySQL
         'OPTIONS': {
