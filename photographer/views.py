@@ -11,6 +11,8 @@ from django.conf import settings
 import json
 import os
 from datetime import datetime
+import unicodedata  # NOVO: Importado para normalização de nomes de arquivo
+import re  # NOVO: Importado para limpeza de nomes de arquivo
 
 # Importa a tarefa Celery de processamento de imagem
 from photographer.tasks import process_image_task
@@ -22,23 +24,24 @@ from .forms import GalleryForm
 # pois não serão mais usadas para esse propósito.
 # from guardian.mixins import PermissionRequiredMixin as ObjectPermissionRequiredMixin
 # from guardian.decorators import permission_required as object_permission_required
-from guardian.shortcuts import assign_perm, remove_perm # Manter para atribuição na criação, se necessário
+from guardian.shortcuts import assign_perm, remove_perm  # Manter para atribuição na criação, se necessário
 
 
 # Mixin para verificar se o usuário é fotógrafo ou admin
 # Esta mixin agora será a ÚNICA responsável por verificar as permissões de acesso baseadas no papel (fotógrafo/superuser).
 class PhotographerRequiredMixin(LoginRequiredMixin, AccessMixin):
     login_url = reverse_lazy('accounts:login')
-    raise_exception = True # Levanta 403 Forbidden se não permitido
+    raise_exception = True  # Levanta 403 Forbidden se não permitido
 
     def dispatch(self, request, *args, **kwargs):
         # Primeiro, verifica se o usuário está autenticado
         if not request.user.is_authenticated:
             # Se não autenticado e for AJAX, retorna JSON 403
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'status': 'error', 'message': 'Autenticação necessária para realizar esta ação.'}, status=403)
+                return JsonResponse({'status': 'error', 'message': 'Autenticação necessária para realizar esta ação.'},
+                                    status=403)
             # Caso contrário, redireciona para o login padrão
-            return self.handle_no_permission() # Isso usará self.login_url
+            return self.handle_no_permission()  # Isso usará self.login_url
 
         # Verifica se o usuário é um superusuário ou fotógrafo
         # A propriedade is_photographer no modelo User já lida com superusuários
@@ -46,9 +49,11 @@ class PhotographerRequiredMixin(LoginRequiredMixin, AccessMixin):
             # Se não for superusuário nem fotógrafo
             # Se for AJAX, retorna JSON 403 imediatamente
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'status': 'error', 'message': 'Você não tem permissão de fotógrafo para acessar esta área.'}, status=403)
+                return JsonResponse(
+                    {'status': 'error', 'message': 'Você não tem permissão de fotógrafo para acessar esta área.'},
+                    status=403)
             # Caso contrário, nega a permissão (redireciona ou levanta exceção)
-            return self.handle_no_permission() # Isso usará raise_exception=True ou self.login_url
+            return self.handle_no_permission()  # Isso usará raise_exception=True ou self.login_url
 
         # Se autenticado e for fotógrafo/superuser, prossegue com o dispatch original
         # Não há mais ObjectPermissionRequiredMixin aqui, pois a lógica é baseada em grupo.
@@ -58,7 +63,8 @@ class PhotographerRequiredMixin(LoginRequiredMixin, AccessMixin):
     # já tenha retornado a resposta JSON para AJAX.
     def handle_no_permission(self):
         if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({'status': 'error', 'message': 'Permissão negada para realizar esta ação (fallback AJAX).'}, status=403)
+            return JsonResponse(
+                {'status': 'error', 'message': 'Permissão negada para realizar esta ação (fallback AJAX).'}, status=403)
         return super().handle_no_permission()
 
 
@@ -103,7 +109,7 @@ class GalleryListView(PhotographerRequiredMixin, ListView):
 
         # Lógica de filtragem por status público (NOVO)
         is_public_filter = self.request.GET.get('is_public')
-        self.filtered_is_public = is_public_filter # Armazena para o contexto
+        self.filtered_is_public = is_public_filter  # Armazena para o contexto
 
         if is_public_filter:
             if is_public_filter == 'true':
@@ -118,7 +124,7 @@ class GalleryListView(PhotographerRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['filtered_start_date'] = self.filtered_start_date
         context['filtered_end_date'] = self.filtered_end_date
-        context['filtered_is_public'] = self.filtered_is_public # Adiciona ao contexto
+        context['filtered_is_public'] = self.filtered_is_public  # Adiciona ao contexto
         return context
 
 
@@ -128,6 +134,7 @@ class GalleryDetailView(PhotographerRequiredMixin, DetailView):
     model = Galeria
     template_name = 'gallery_detail.html'
     context_object_name = 'gallery'
+
     # permission_required = 'core.view_galeria' # Removido, pois a verificação será via PhotographerRequiredMixin e get_queryset
 
     def get_queryset(self):
@@ -175,6 +182,7 @@ class GalleryUpdateView(PhotographerRequiredMixin, UpdateView):
     form_class = GalleryForm
     template_name = 'gallery_form.html'
     context_object_name = 'gallery'
+
     # permission_required = 'core.change_galeria' # Removido
 
     def get_queryset(self):
@@ -200,6 +208,7 @@ class GalleryDeleteView(PhotographerRequiredMixin, DeleteView):
     template_name = 'gallery_confirm_delete.html'
     context_object_name = 'gallery'
     success_url = reverse_lazy('photographer:gallery_list')
+
     # permission_required = 'core.delete_galeria' # Removido
 
     def get_queryset(self):
@@ -223,7 +232,8 @@ class ImageUploadView(PhotographerRequiredMixin, View):
 
         # Adicionado verificação para garantir que o fotógrafo só pode fazer upload em suas próprias galerias
         if not request.user.is_superuser and gallery.fotografo != request.user:
-            return JsonResponse({'status': 'error', 'message': 'Você não tem permissão para fazer upload nesta galeria.'}, status=403)
+            return JsonResponse(
+                {'status': 'error', 'message': 'Você não tem permissão para fazer upload nesta galeria.'}, status=403)
 
         files = request.FILES.getlist('images')
 
@@ -233,28 +243,39 @@ class ImageUploadView(PhotographerRequiredMixin, View):
         uploaded_count = 0
         errors = []
 
-        try:
-            with transaction.atomic():
-                for i, file in enumerate(files):
-                    try:
-                        max_order = gallery.images.all().order_by(
-                            '-order').first().order if gallery.images.exists() else -1
-                        new_order = max_order + 1
+        # ALTERADO: O bloco transaction.atomic() foi movido para DENTRO do loop
+        # para que cada imagem seja processada em sua própria transação.
+        # Isso evita que o erro de uma imagem contamine toda a transação.
+        for i, file in enumerate(files):
+            try:
+                with transaction.atomic():  # Transação atômica para cada imagem
+                    max_order = gallery.images.all().order_by(
+                        '-order').first().order if gallery.images.exists() else -1
+                    new_order = max_order + 1
 
-                        image_instance = Image.objects.create(
-                            galeria=gallery,
-                            image_file_original=file,
-                            original_file_name=file.name,
-                            order=new_order,
-                        )
-                        uploaded_count += 1
-                        process_image_task.delay(image_instance.pk)
+                    # NOVO: Sanitiza o nome do arquivo para remover caracteres não-ASCII
+                    # Isso evita o erro 'ascii' codec can't encode character
+                    sanitized_file_name = unicodedata.normalize('NFKD', file.name).encode('ascii', 'ignore').decode(
+                        'ascii')
+                    # Remove caracteres que ainda podem ser problemáticos (não alfanuméricos, espaços, pontos, hífens)
+                    sanitized_file_name = re.sub(r'[^\w\s.-]', '', sanitized_file_name).strip()
+                    # Substitui múltiplos espaços por um único underscore (opcional, mas bom para nomes de arquivo)
+                    sanitized_file_name = re.sub(r'\s+', '_', sanitized_file_name)
 
-                    except Exception as e:
-                        errors.append(f"Erro ao salvar/disparar tarefa para imagem {file.name}: {e}")
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': f"Erro crítico durante o upload: {e}"}, status=500)
+                    image_instance = Image.objects.create(
+                        galeria=gallery,
+                        image_file_original=file,
+                        original_file_name=sanitized_file_name,  # Usa o nome sanitizado
+                        order=new_order,
+                    )
+                    uploaded_count += 1
+                    process_image_task.delay(image_instance.pk)
 
+            except Exception as e:
+                # Captura erros individuais e os adiciona à lista de erros
+                errors.append(f"Erro ao salvar/disparar tarefa para imagem {file.name}: {e}")
+
+        # A lógica de resposta permanece a mesma, mas agora os erros são coletados de transações individuais
         if errors:
             return JsonResponse({'status': 'warning',
                                  'message': f"{uploaded_count} imagem(ns) enviada(s) com sucesso, mas houve erros no processamento de algumas: {'; '.join(errors)}"},
@@ -293,7 +314,9 @@ class ImageReorderView(PhotographerRequiredMixin, View):
 
         # Adicionado verificação para garantir que o fotógrafo só pode reordenar em suas próprias galerias
         if not request.user.is_superuser and gallery.fotografo != request.user:
-            return JsonResponse({'status': 'error', 'message': 'Você não tem permissão para reordenar imagens nesta galeria.'}, status=403)
+            return JsonResponse(
+                {'status': 'error', 'message': 'Você não tem permissão para reordenar imagens nesta galeria.'},
+                status=403)
 
         image_ids_order = json.loads(request.body).get('image_ids', [])
 
@@ -324,7 +347,8 @@ class SetGalleryCoverView(PhotographerRequiredMixin, View):
 
         # Adicionado verificação para garantir que o fotógrafo só pode definir capa em suas próprias galerias
         if not request.user.is_superuser and gallery.fotografo != request.user:
-            return JsonResponse({'status': 'error', 'message': 'Você não tem permissão para definir a capa desta galeria.'}, status=403)
+            return JsonResponse(
+                {'status': 'error', 'message': 'Você não tem permissão para definir a capa desta galeria.'}, status=403)
 
         image_id = json.loads(request.body).get('image_id')
 
@@ -353,7 +377,9 @@ class ImageDeleteView(PhotographerRequiredMixin, View):
 
         # Adicionado verificação para garantir que o fotógrafo só pode deletar imagens em suas próprias galerias
         if not request.user.is_superuser and gallery.fotografo != request.user:
-            return JsonResponse({'status': 'error', 'message': 'Você não tem permissão para excluir imagens desta galeria.'}, status=403)
+            return JsonResponse(
+                {'status': 'error', 'message': 'Você não tem permissão para excluir imagens desta galeria.'},
+                status=403)
 
         image_instance = get_object_or_404(Image, pk=image_pk, galeria=gallery)
 
