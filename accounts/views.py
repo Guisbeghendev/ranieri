@@ -61,7 +61,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         # Últimas 3 galerias públicas
         context['latest_public_galleries'] = Galeria.objects.filter(is_public=True).order_by('-created_at')[:3]
 
-        # Dicionário para armazenar as últimas 3 galerias POR GRUPO DE AUDIÊNCIA (apenas privadas)
+        # Dicionário para armazenar as últimas 3 galerias POR GRUPO DE AUDIÊNCIA (agora inclui públicas se associadas ao grupo)
         latest_galleries_by_group = {}
 
         # Pega os AudienceGroups aos quais o usuário está diretamente associado
@@ -73,25 +73,30 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
         if user_audience_groups.exists():
             for audience_group in user_audience_groups:
-                # Busca galerias NÃO PÚBLICAS associadas a este AudienceGroup
+                # Busca galerias associadas a este AudienceGroup (AGORA INCLUI PÚBLICAS SE ASSOCIADAS)
                 group_galleries = Galeria.objects.filter(
-                    Q(audience_groups=audience_group) & Q(is_public=False)
+                    Q(audience_groups=audience_group)  # REMOVIDO: & Q(is_public=False)
                 ).order_by('-created_at')[:3]  # Limita a 3 galerias por grupo
 
                 # DEBUG PRINT: Verifique as galerias encontradas para cada grupo
                 print(
-                    f"DEBUG: For AudienceGroup '{audience_group.name}', found {group_galleries.count()} private galleries: {[g.name for g in group_galleries]}")
+                    f"DEBUG: For AudienceGroup '{audience_group.name}', found {group_galleries.count()} galleries: {[g.name for g in group_galleries]}")
 
                 if group_galleries.exists():
                     latest_galleries_by_group[audience_group.name] = group_galleries
 
-        # Adiciona as galerias privadas do próprio fotógrafo (se aplicável)
+        # Adiciona as galerias do próprio fotógrafo (se aplicável), garantindo que não duplique
         if context['is_photographer_user']:
             pks_already_collected = set()
             for galleries_list in latest_galleries_by_group.values():
                 for gallery in galleries_list:
                     pks_already_collected.add(gallery.pk)
 
+            # Busca galerias criadas pelo fotógrafo que AINDA NÃO FORAM INCLUÍDAS
+            # Aqui, ainda filtramos por is_public=False se quisermos que 'Minhas Galerias (Fotógrafo)'
+            # seja estritamente para as privadas dele que não estão em nenhum grupo.
+            # Se você quiser que o fotógrafo veja TODAS as suas galerias aqui (públicas e privadas),
+            # remova o Q(is_public=False) também desta consulta.
             photographer_galleries_not_in_groups = Galeria.objects.filter(
                 Q(fotografo=user) & Q(is_public=False)
             ).exclude(pk__in=list(pks_already_collected)).order_by('-created_at')[:3]
