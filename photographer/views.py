@@ -4,7 +4,7 @@ from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, AccessMixin
 from django.contrib import messages
 from django.db import transaction
-from django.http import JsonResponse, HttpResponseForbidden
+from django.http import JsonResponse, HttpResponseForbidden, Http404  # Importe Http404
 from django.views.decorators.http import require_POST
 from django.utils.decorators import method_decorator
 from django.conf import settings
@@ -17,13 +17,9 @@ import re
 # Importa a tarefa Celery de processamento de imagem
 from photographer.tasks import process_image_task
 
-from core.models import Galeria, Image, User, AudienceGroup  # Importe AudienceGroup
-from .forms import GalleryForm
-
-from guardian.shortcuts import assign_perm, remove_perm
+from core.models import Galeria, Image, User, AudienceGroup
 
 
-# Mixin para verificar se o usuário é fotógrafo ou admin
 class PhotographerRequiredMixin(LoginRequiredMixin, AccessMixin):
     login_url = reverse_lazy('accounts:login')
     raise_exception = True
@@ -35,8 +31,6 @@ class PhotographerRequiredMixin(LoginRequiredMixin, AccessMixin):
                                     status=403)
             return self.handle_no_permission()
 
-        # A lógica de permissão de fotógrafo/admin para acesso geral à área
-        # permanece aqui. A filtragem de galerias é feita em get_queryset.
         if not request.user.is_photographer and not request.user.is_superuser:
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse(
@@ -55,41 +49,38 @@ class PhotographerRequiredMixin(LoginRequiredMixin, AccessMixin):
 
 # --- Views CRUD de Galerias ---
 
-class GalleryListView(ListView):  # REMOVIDO PhotographerRequiredMixin daqui, a filtragem será em get_queryset
+class GalleryListView(ListView):
     model = Galeria
     template_name = 'gallery_list.html'
     context_object_name = 'galleries'
     paginate_by = 10
 
     def get_queryset(self):
-        # Inicia com um queryset vazio
-        all_visible_galleries = Galeria.objects.none()
+        # Usamos um conjunto para armazenar PKS únicos de galerias visíveis
+        visible_gallery_pks = set()
 
         # 1. Superusuários veem todas as galerias
         if self.request.user.is_superuser:
-            all_visible_galleries = Galeria.objects.all()
+            visible_gallery_pks.update(Galeria.objects.values_list('pk', flat=True))
         else:
             # 2. Todos os usuários autenticados podem ver galerias públicas
-            all_visible_galleries = Galeria.objects.filter(is_public=True)
+            visible_gallery_pks.update(Galeria.objects.filter(is_public=True).values_list('pk', flat=True))
 
-            # 3. Fotógrafos veem suas próprias galerias (se não forem superusuários)
+            # 3. Fotógrafos veem suas próprias galerias
             if self.request.user.is_photographer:
-                photographer_galleries = Galeria.objects.filter(fotografo=self.request.user)
-                all_visible_galleries = all_visible_galleries.union(photographer_galleries)
+                visible_gallery_pks.update(
+                    Galeria.objects.filter(fotografo=self.request.user).values_list('pk', flat=True))
 
             # 4. Usuários veem galerias baseadas em seus grupos de audiência
-            # Pega os nomes dos grupos de autenticação do usuário
             user_auth_group_names = self.request.user.groups.values_list('name', flat=True)
             if user_auth_group_names:
-                # Encontra os AudienceGroups que têm o mesmo nome dos auth.Groups do usuário
                 matching_audience_groups = AudienceGroup.objects.filter(name__in=user_auth_group_names)
-                # Filtra galerias que estão associadas a esses AudienceGroups
-                group_restricted_galleries = Galeria.objects.filter(audience_groups__in=matching_audience_groups)
-                # Combina com as galerias já coletadas
-                all_visible_galleries = all_visible_galleries.union(group_restricted_galleries)
+                # Adiciona os PKS das galerias associadas a esses AudienceGroups
+                visible_gallery_pks.update(
+                    Galeria.objects.filter(audience_groups__in=matching_audience_groups).values_list('pk', flat=True))
 
-        # Garante que não haja duplicatas após as uniões
-        queryset = all_visible_galleries.distinct()
+        # Constrói o queryset final a partir dos PKS únicos
+        queryset = Galeria.objects.filter(pk__in=list(visible_gallery_pks))
 
         # Lógica de filtragem por data (aplicada ao queryset já filtrado por permissão)
         start_date_str = self.request.GET.get('start_date')
@@ -134,13 +125,12 @@ class GalleryListView(ListView):  # REMOVIDO PhotographerRequiredMixin daqui, a 
         return context
 
 
-class GalleryDetailView(DetailView):  # REMOVIDO PhotographerRequiredMixin daqui, a filtragem será em get_queryset
+class GalleryDetailView(DetailView):
     model = Galeria
     template_name = 'gallery_detail.html'
     context_object_name = 'gallery'
 
     def get_queryset(self):
-        # Inicia com o queryset padrão do DetailView (Galeria.objects.all())
         queryset = super().get_queryset()
 
         # Se o usuário é superusuário, ele pode ver qualquer galeria
@@ -167,17 +157,12 @@ class GalleryDetailView(DetailView):  # REMOVIDO PhotographerRequiredMixin daqui
         # 3. Se o usuário pertence a um dos grupos de audiência da galeria
         else:
             user_auth_group_names = self.request.user.groups.values_list('name', flat=True)
-            # Verifica se há intersecção entre os AudienceGroups da galeria e os auth.Groups do usuário
             if gallery.audience_groups.filter(name__in=user_auth_group_names).exists():
                 can_view = True
 
         if not can_view:
             raise Http404("A galeria não foi encontrada ou você não tem permissão para visualizá-la.")
-            # Ou, se preferir um 403 Forbidden:
-            # from django.http import Http404, HttpResponseForbidden
-            # return HttpResponseForbidden("Você não tem permissão para visualizar esta galeria.")
 
-        # Se o usuário tem permissão, retorna o queryset filtrado para aquela galeria específica
         return queryset.filter(pk=self.kwargs['pk'])
 
     def get_context_data(self, **kwargs):
