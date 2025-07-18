@@ -65,8 +65,11 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         latest_galleries_by_group = {}
 
         # Pega os AudienceGroups aos quais o usuário está diretamente associado
-        # (graças ao sinal m2m_changed que sincroniza auth.Group com User.audience_groups)
         user_audience_groups = user.audience_groups.all()
+
+        # DEBUG PRINT: Verifique quais AudienceGroups o usuário possui
+        print(
+            f"DEBUG: User '{user.username}' (PK: {user.pk}) belongs to AudienceGroups: {[ag.name for ag in user_audience_groups]}")
 
         if user_audience_groups.exists():
             for audience_group in user_audience_groups:
@@ -75,28 +78,34 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                     Q(audience_groups=audience_group) & Q(is_public=False)
                 ).order_by('-created_at')[:3]  # Limita a 3 galerias por grupo
 
+                # DEBUG PRINT: Verifique as galerias encontradas para cada grupo
+                print(
+                    f"DEBUG: For AudienceGroup '{audience_group.name}', found {group_galleries.count()} private galleries: {[g.name for g in group_galleries]}")
+
                 if group_galleries.exists():
                     latest_galleries_by_group[audience_group.name] = group_galleries
 
         # Adiciona as galerias privadas do próprio fotógrafo (se aplicável)
-        # Garante que não duplique galerias já vistas via grupos de audiência
         if context['is_photographer_user']:
-            # Pega os PKs de todas as galerias privadas já coletadas pelos grupos de audiência
             pks_already_collected = set()
             for galleries_list in latest_galleries_by_group.values():
                 for gallery in galleries_list:
                     pks_already_collected.add(gallery.pk)
 
-            # Busca galerias privadas criadas pelo fotógrafo que AINDA NÃO FORAM INCLUÍDAS
             photographer_galleries_not_in_groups = Galeria.objects.filter(
                 Q(fotografo=user) & Q(is_public=False)
             ).exclude(pk__in=list(pks_already_collected)).order_by('-created_at')[:3]
 
             if photographer_galleries_not_in_groups.exists():
-                # Adiciona essas galerias sob uma chave específica
                 latest_galleries_by_group['Minhas Galerias (Fotógrafo)'] = photographer_galleries_not_in_groups
+                # DEBUG PRINT: Verifique as galerias do fotógrafo não incluídas em grupos
+                print(
+                    f"DEBUG: Fotógrafo galleries not in groups: {[g.name for g in photographer_galleries_not_in_groups]}")
 
         context['latest_galleries_by_group'] = latest_galleries_by_group
+        # DEBUG PRINT: Verifique o dicionário final para o contexto
+        print(f"DEBUG: Final latest_galleries_by_group for context: {latest_galleries_by_group}")
+
         context['see_more_galleries_url'] = reverse_lazy('galleries:client_group_list')
 
         return context
