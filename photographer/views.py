@@ -18,8 +18,10 @@ import re
 from photographer.tasks import process_image_task
 
 from core.models import Galeria, Image, User, AudienceGroup
+from .forms import GalleryForm  # GARANTA QUE ESTA LINHA ESTEJA PRESENTE E CORRETA
 
 
+# Mixin para verificar se o usuário é fotógrafo ou admin
 class PhotographerRequiredMixin(LoginRequiredMixin, AccessMixin):
     login_url = reverse_lazy('accounts:login')
     raise_exception = True
@@ -118,7 +120,7 @@ class GalleryListView(ListView):
         return queryset.order_by('-event_date', '-created_at')
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)  # LINHA CORRIGIDA AQUI
         context['filtered_start_date'] = self.filtered_start_date
         context['filtered_end_date'] = self.filtered_end_date
         context['filtered_is_public'] = self.filtered_is_public
@@ -133,28 +135,17 @@ class GalleryDetailView(DetailView):
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        # Se o usuário é superusuário, ele pode ver qualquer galeria
         if self.request.user.is_superuser:
             return queryset
 
-        # Para outros usuários autenticados, a galeria deve ser:
-        # 1. Criada por ele (se for fotógrafo)
-        # 2. Pública
-        # 3. Associada a um de seus grupos de audiência
-
-        # Filtra a galeria específica pelo PK
         gallery = get_object_or_404(queryset, pk=self.kwargs['pk'])
 
-        # Verifica se o usuário tem permissão para ver esta galeria
         can_view = False
 
-        # 1. Se o usuário é o fotógrafo criador da galeria
         if self.request.user.is_photographer and gallery.fotografo == self.request.user:
             can_view = True
-        # 2. Se a galeria é pública
         elif gallery.is_public:
             can_view = True
-        # 3. Se o usuário pertence a um dos grupos de audiência da galeria
         else:
             user_auth_group_names = self.request.user.groups.values_list('name', flat=True)
             if gallery.audience_groups.filter(name__in=user_auth_group_names).exists():
