@@ -5,7 +5,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView, View, DeleteView
 from django.urls import reverse_lazy
 from django.contrib import messages
-from core.models import Profile, Galeria, AudienceGroup  # Importa AudienceGroup
+from core.models import Profile, Galeria, AudienceGroup
 from django.db.models import Q
 
 User = get_user_model()
@@ -56,29 +56,27 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         context['is_staff_user'] = user.is_staff
         context['is_photographer_user'] = getattr(user, 'is_photographer', False)
         context['user_profile'] = Profile.objects.get_or_create(user=user)[0]
-        context['user_roles'] = user.groups.all()
+        context['user_roles'] = user.groups.all()  # auth.Group do usuário
 
-        # Últimas 3 galerias públicas a uma variável de contexto dedicada (para o card público)
+        # Últimas 3 galerias públicas
         context['latest_public_galleries'] = Galeria.objects.filter(is_public=True).order_by('-created_at')[:3]
 
         # Dicionário para armazenar as últimas 3 galerias POR GRUPO DE AUDIÊNCIA (apenas privadas)
         latest_galleries_by_group = {}
 
-        # Coleta os nomes dos grupos de autenticação do usuário (auth.Group)
-        user_auth_group_names = user.groups.values_list('name', flat=True)
+        # Pega os AudienceGroups aos quais o usuário está diretamente associado
+        # (graças ao sinal m2m_changed que sincroniza auth.Group com User.audience_groups)
+        user_audience_groups = user.audience_groups.all()
 
-        # Encontra os AudienceGroups que correspondem aos nomes dos auth.Groups do usuário
-        matching_audience_groups = AudienceGroup.objects.filter(name__in=user_auth_group_names)
+        if user_audience_groups.exists():
+            for audience_group in user_audience_groups:
+                # Busca galerias NÃO PÚBLICAS associadas a este AudienceGroup
+                group_galleries = Galeria.objects.filter(
+                    Q(audience_groups=audience_group) & Q(is_public=False)
+                ).order_by('-created_at')[:3]  # Limita a 3 galerias por grupo
 
-        # Para cada AudienceGroup correspondente, busca as galerias privadas
-        for audience_group in matching_audience_groups:
-            # Garante que apenas galerias NÃO PÚBLICAS associadas ao grupo sejam exibidas
-            group_galleries = Galeria.objects.filter(
-                Q(audience_groups=audience_group) & Q(is_public=False)
-            ).order_by('-created_at')[:3]  # Limita a 3 galerias por grupo
-
-            if group_galleries.exists():
-                latest_galleries_by_group[audience_group.name] = group_galleries
+                if group_galleries.exists():
+                    latest_galleries_by_group[audience_group.name] = group_galleries
 
         # Adiciona as galerias privadas do próprio fotógrafo (se aplicável)
         # Garante que não duplique galerias já vistas via grupos de audiência
@@ -95,6 +93,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             ).exclude(pk__in=list(pks_already_collected)).order_by('-created_at')[:3]
 
             if photographer_galleries_not_in_groups.exists():
+                # Adiciona essas galerias sob uma chave específica
                 latest_galleries_by_group['Minhas Galerias (Fotógrafo)'] = photographer_galleries_not_in_groups
 
         context['latest_galleries_by_group'] = latest_galleries_by_group
@@ -103,7 +102,6 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         return context
 
 
-# VIEW para exibir o perfil
 class ViewProfileView(LoginRequiredMixin, TemplateView):
     template_name = 'profile.html'
     login_url = reverse_lazy('accounts:login')
@@ -114,12 +112,9 @@ class ViewProfileView(LoginRequiredMixin, TemplateView):
         profile, created = Profile.objects.get_or_create(user=user)
         context['user_profile'] = profile
         context['user_roles'] = user.groups.all()
-        # audience_groups não é mais necessário aqui, pois a lógica de dashboard usa user.groups
-        # context['audience_groups'] = user.audience_groups.all() # Pode ser removido se não usado no template
         return context
 
 
-# VIEW para editar o perfil
 class EditProfileView(LoginRequiredMixin, View):
     template_name = 'edit_profile.html'
     login_url = reverse_lazy('accounts:login')
@@ -154,7 +149,6 @@ class EditProfileView(LoginRequiredMixin, View):
             })
 
 
-# NOVA VIEW: Para exclusão da conta
 class DeleteAccountView(LoginRequiredMixin, DeleteView):
     model = User
     template_name = 'delete_account.html'
