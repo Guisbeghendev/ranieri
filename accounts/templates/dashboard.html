@@ -18,7 +18,8 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            /* Cada swiper-slide agora conterá APENAS UMA galeria */
+            /* REMOVIDO: flex-direction: column; - Esta era a causa do problema */
+            padding: 10px; /* Espaçamento interno do slide */
         }
         .swiper-pagination-bullet-active {
             background-color: #8B5CF6 !important; /* Cor roxa1 para o bullet ativo */
