@@ -18,7 +18,6 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            /* Removido flex-direction: column; daqui para evitar empilhamento se houver múltiplos itens no slide */
             /* Cada swiper-slide agora conterá APENAS UMA galeria */
         }
         .swiper-pagination-bullet-active {
@@ -167,7 +166,7 @@
                     <div class="md:hidden swiper-container group-swiper-{{ forloop.counter }}">
                         <div class="swiper-wrapper">
                             {% for gallery in galleries %}
-                                <div class="swiper-slide">
+                                <div class="swiper-slide"> {# AGORA CADA GALERIA É UM SLIDE #}
                                     <div class="bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition duration-300 gallery-item-in-slide">
                                         <a href="{% url 'galleries:client_gallery_detail' gallery.pk %}">
                                             {% if gallery.cover_image and gallery.cover_image.image_file_thumb %}
