@@ -13,12 +13,13 @@
             padding-bottom: 20px; /* Espaço para paginação */
             margin-bottom: 20px; /* Espaço entre carrosséis de grupos diferentes */
         }
+        /* Garantir que cada slide ocupe a largura total do seu container */
         .swiper-slide {
             display: flex;
             justify-content: center;
             align-items: center;
-            flex-direction: column; /* Para alinhar título do grupo e galerias */
-            padding: 10px; /* Espaçamento interno do slide */
+            /* Removido flex-direction: column; daqui para evitar empilhamento se houver múltiplos itens no slide */
+            /* Cada swiper-slide agora conterá APENAS UMA galeria */
         }
         .swiper-pagination-bullet-active {
             background-color: #8B5CF6 !important; /* Cor roxa1 para o bullet ativo */
@@ -34,14 +35,15 @@
             }
         }
 
-        /* Estilos para as galerias dentro de CADA slide (para telas pequenas) */
-        /* Cada slide terá UMA galeria visível por vez em telas muito pequenas */
+        /* Estilos para a galeria individual dentro de CADA slide */
+        /* Isso garante que a galeria ocupe o espaço correto e seja responsiva */
         .gallery-item-in-slide {
-            width: 100%; /* Garante que a galeria ocupe a largura total do slide */
+            width: 100%; /* Ocupa a largura total do swiper-slide */
             max-width: 300px; /* Limita o tamanho máximo da galeria individual */
+            box-sizing: border-box; /* Inclui padding e border no width */
         }
 
-        /* Estilos para o layout de grade em telas médias e grandes */
+        /* Estilos para o layout de grade em telas médias e grandes (que não usam carrossel) */
         .gallery-grid-desktop {
             display: grid;
             grid-template-columns: repeat(1, minmax(0, 1fr));
