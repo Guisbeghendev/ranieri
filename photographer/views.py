@@ -18,7 +18,9 @@ import re
 from photographer.tasks import process_image_task
 
 from core.models import Galeria, Image, User, AudienceGroup
-from .forms import GalleryForm  # GARANTA QUE ESTA LINHA ESTEJA PRESENTE E CORRETA
+from .forms import GalleryForm
+
+from guardian.shortcuts import assign_perm, remove_perm  # LINHA CORRIGIDA: Adicionada esta importação
 
 
 # Mixin para verificar se o usuário é fotógrafo ou admin
@@ -58,33 +60,25 @@ class GalleryListView(ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        # Usamos um conjunto para armazenar PKS únicos de galerias visíveis
         visible_gallery_pks = set()
 
-        # 1. Superusuários veem todas as galerias
         if self.request.user.is_superuser:
             visible_gallery_pks.update(Galeria.objects.values_list('pk', flat=True))
         else:
-            # 2. Todos os usuários autenticados podem ver galerias públicas
             visible_gallery_pks.update(Galeria.objects.filter(is_public=True).values_list('pk', flat=True))
 
-            # 3. Fotógrafos veem suas próprias galerias
             if self.request.user.is_photographer:
                 visible_gallery_pks.update(
                     Galeria.objects.filter(fotografo=self.request.user).values_list('pk', flat=True))
 
-            # 4. Usuários veem galerias baseadas em seus grupos de audiência
             user_auth_group_names = self.request.user.groups.values_list('name', flat=True)
             if user_auth_group_names:
                 matching_audience_groups = AudienceGroup.objects.filter(name__in=user_auth_group_names)
-                # Adiciona os PKS das galerias associadas a esses AudienceGroups
                 visible_gallery_pks.update(
                     Galeria.objects.filter(audience_groups__in=matching_audience_groups).values_list('pk', flat=True))
 
-        # Constrói o queryset final a partir dos PKS únicos
         queryset = Galeria.objects.filter(pk__in=list(visible_gallery_pks))
 
-        # Lógica de filtragem por data (aplicada ao queryset já filtrado por permissão)
         start_date_str = self.request.GET.get('start_date')
         end_date_str = self.request.GET.get('end_date')
 
@@ -107,7 +101,6 @@ class GalleryListView(ListView):
             except ValueError:
                 pass
 
-        # Lógica de filtragem por status público
         is_public_filter = self.request.GET.get('is_public')
         self.filtered_is_public = is_public_filter
 
@@ -120,7 +113,7 @@ class GalleryListView(ListView):
         return queryset.order_by('-event_date', '-created_at')
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)  # LINHA CORRIGIDA AQUI
+        context = super().get_context_data(**kwargs)
         context['filtered_start_date'] = self.filtered_start_date
         context['filtered_end_date'] = self.filtered_end_date
         context['filtered_is_public'] = self.filtered_is_public
@@ -171,6 +164,7 @@ class GalleryCreateView(PhotographerRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.fotografo = self.request.user
         response = super().form_valid(form)
+        # LINHAS ABAIXO ONDE assign_perm É USADO
         assign_perm('view_galeria', self.request.user, self.object)
         assign_perm('change_galeria', self.request.user, self.object)
         assign_perm('delete_galeria', self.request.user, self.object)
