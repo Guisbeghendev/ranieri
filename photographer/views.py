@@ -11,56 +11,41 @@ from django.conf import settings
 import json
 import os
 from datetime import datetime
-import unicodedata  # NOVO: Importado para normalização de nomes de arquivo
-import re  # NOVO: Importado para limpeza de nomes de arquivo
+import unicodedata
+import re
 
 # Importa a tarefa Celery de processamento de imagem
 from photographer.tasks import process_image_task
 
-from core.models import Galeria, Image, User
+from core.models import Galeria, Image, User, AudienceGroup  # Importe AudienceGroup
 from .forms import GalleryForm
 
-# Removidas as importações para Django Guardian relacionadas a permissões de objeto,
-# pois não serão mais usadas para esse propósito.
-# from guardian.mixins import PermissionRequiredMixin as ObjectPermissionRequiredMixin
-# from guardian.decorators import permission_required as object_permission_required
-from guardian.shortcuts import assign_perm, remove_perm  # Manter para atribuição na criação, se necessário
+from guardian.shortcuts import assign_perm, remove_perm
 
 
 # Mixin para verificar se o usuário é fotógrafo ou admin
-# Esta mixin agora será a ÚNICA responsável por verificar as permissões de acesso baseadas no papel (fotógrafo/superuser).
 class PhotographerRequiredMixin(LoginRequiredMixin, AccessMixin):
     login_url = reverse_lazy('accounts:login')
-    raise_exception = True  # Levanta 403 Forbidden se não permitido
+    raise_exception = True
 
     def dispatch(self, request, *args, **kwargs):
-        # Primeiro, verifica se o usuário está autenticado
         if not request.user.is_authenticated:
-            # Se não autenticado e for AJAX, retorna JSON 403
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({'status': 'error', 'message': 'Autenticação necessária para realizar esta ação.'},
                                     status=403)
-            # Caso contrário, redireciona para o login padrão
-            return self.handle_no_permission()  # Isso usará self.login_url
+            return self.handle_no_permission()
 
-        # Verifica se o usuário é um superusuário ou fotógrafo
-        # A propriedade is_photographer no modelo User já lida com superusuários
-        if not request.user.is_photographer:
-            # Se não for superusuário nem fotógrafo
-            # Se for AJAX, retorna JSON 403 imediatamente
+        # A lógica de permissão de fotógrafo/admin para acesso geral à área
+        # permanece aqui. A filtragem de galerias é feita em get_queryset.
+        if not request.user.is_photographer and not request.user.is_superuser:
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse(
                     {'status': 'error', 'message': 'Você não tem permissão de fotógrafo para acessar esta área.'},
                     status=403)
-            # Caso contrário, nega a permissão (redireciona ou levanta exceção)
-            return self.handle_no_permission()  # Isso usará raise_exception=True ou self.login_url
+            return self.handle_no_permission()
 
-        # Se autenticado e for fotógrafo/superuser, prossegue com o dispatch original
-        # Não há mais ObjectPermissionRequiredMixin aqui, pois a lógica é baseada em grupo.
         return super().dispatch(request, *args, **kwargs)
 
-    # Este handle_no_permission é um fallback. O ideal é que o dispatch acima
-    # já tenha retornado a resposta JSON para AJAX.
     def handle_no_permission(self):
         if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse(
@@ -70,21 +55,43 @@ class PhotographerRequiredMixin(LoginRequiredMixin, AccessMixin):
 
 # --- Views CRUD de Galerias ---
 
-class GalleryListView(PhotographerRequiredMixin, ListView):
+class GalleryListView(ListView):  # REMOVIDO PhotographerRequiredMixin daqui, a filtragem será em get_queryset
     model = Galeria
     template_name = 'gallery_list.html'
     context_object_name = 'galleries'
     paginate_by = 10
 
     def get_queryset(self):
-        queryset = Galeria.objects.all()
+        # Inicia com um queryset vazio
+        all_visible_galleries = Galeria.objects.none()
 
-        # Filtra por fotógrafo se não for superusuário
-        # Apenas galerias criadas pelo fotógrafo logado serão exibidas para ele.
-        if not self.request.user.is_superuser:
-            queryset = queryset.filter(fotografo=self.request.user)
+        # 1. Superusuários veem todas as galerias
+        if self.request.user.is_superuser:
+            all_visible_galleries = Galeria.objects.all()
+        else:
+            # 2. Todos os usuários autenticados podem ver galerias públicas
+            all_visible_galleries = Galeria.objects.filter(is_public=True)
 
-        # Lógica de filtragem por data
+            # 3. Fotógrafos veem suas próprias galerias (se não forem superusuários)
+            if self.request.user.is_photographer:
+                photographer_galleries = Galeria.objects.filter(fotografo=self.request.user)
+                all_visible_galleries = all_visible_galleries.union(photographer_galleries)
+
+            # 4. Usuários veem galerias baseadas em seus grupos de audiência
+            # Pega os nomes dos grupos de autenticação do usuário
+            user_auth_group_names = self.request.user.groups.values_list('name', flat=True)
+            if user_auth_group_names:
+                # Encontra os AudienceGroups que têm o mesmo nome dos auth.Groups do usuário
+                matching_audience_groups = AudienceGroup.objects.filter(name__in=user_auth_group_names)
+                # Filtra galerias que estão associadas a esses AudienceGroups
+                group_restricted_galleries = Galeria.objects.filter(audience_groups__in=matching_audience_groups)
+                # Combina com as galerias já coletadas
+                all_visible_galleries = all_visible_galleries.union(group_restricted_galleries)
+
+        # Garante que não haja duplicatas após as uniões
+        queryset = all_visible_galleries.distinct()
+
+        # Lógica de filtragem por data (aplicada ao queryset já filtrado por permissão)
         start_date_str = self.request.GET.get('start_date')
         end_date_str = self.request.GET.get('end_date')
 
@@ -107,16 +114,15 @@ class GalleryListView(PhotographerRequiredMixin, ListView):
             except ValueError:
                 pass
 
-        # Lógica de filtragem por status público (NOVO)
+        # Lógica de filtragem por status público
         is_public_filter = self.request.GET.get('is_public')
-        self.filtered_is_public = is_public_filter  # Armazena para o contexto
+        self.filtered_is_public = is_public_filter
 
         if is_public_filter:
             if is_public_filter == 'true':
                 queryset = queryset.filter(is_public=True)
             elif is_public_filter == 'false':
                 queryset = queryset.filter(is_public=False)
-            # Se for '', significa "todas" e não aplicamos filtro
 
         return queryset.order_by('-event_date', '-created_at')
 
@@ -124,25 +130,55 @@ class GalleryListView(PhotographerRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['filtered_start_date'] = self.filtered_start_date
         context['filtered_end_date'] = self.filtered_end_date
-        context['filtered_is_public'] = self.filtered_is_public  # Adiciona ao contexto
+        context['filtered_is_public'] = self.filtered_is_public
         return context
 
 
-# GalleryDetailView agora usa apenas PhotographerRequiredMixin
-# A permissão de visualização é tratada pela lógica de get_queryset ou por permissões globais do grupo.
-class GalleryDetailView(PhotographerRequiredMixin, DetailView):
+class GalleryDetailView(DetailView):  # REMOVIDO PhotographerRequiredMixin daqui, a filtragem será em get_queryset
     model = Galeria
     template_name = 'gallery_detail.html'
     context_object_name = 'gallery'
 
-    # permission_required = 'core.view_galeria' # Removido, pois a verificação será via PhotographerRequiredMixin e get_queryset
-
     def get_queryset(self):
-        # Garante que um fotógrafo só possa ver suas próprias galerias
+        # Inicia com o queryset padrão do DetailView (Galeria.objects.all())
         queryset = super().get_queryset()
-        if not self.request.user.is_superuser:
-            queryset = queryset.filter(fotografo=self.request.user)
-        return queryset
+
+        # Se o usuário é superusuário, ele pode ver qualquer galeria
+        if self.request.user.is_superuser:
+            return queryset
+
+        # Para outros usuários autenticados, a galeria deve ser:
+        # 1. Criada por ele (se for fotógrafo)
+        # 2. Pública
+        # 3. Associada a um de seus grupos de audiência
+
+        # Filtra a galeria específica pelo PK
+        gallery = get_object_or_404(queryset, pk=self.kwargs['pk'])
+
+        # Verifica se o usuário tem permissão para ver esta galeria
+        can_view = False
+
+        # 1. Se o usuário é o fotógrafo criador da galeria
+        if self.request.user.is_photographer and gallery.fotografo == self.request.user:
+            can_view = True
+        # 2. Se a galeria é pública
+        elif gallery.is_public:
+            can_view = True
+        # 3. Se o usuário pertence a um dos grupos de audiência da galeria
+        else:
+            user_auth_group_names = self.request.user.groups.values_list('name', flat=True)
+            # Verifica se há intersecção entre os AudienceGroups da galeria e os auth.Groups do usuário
+            if gallery.audience_groups.filter(name__in=user_auth_group_names).exists():
+                can_view = True
+
+        if not can_view:
+            raise Http404("A galeria não foi encontrada ou você não tem permissão para visualizá-la.")
+            # Ou, se preferir um 403 Forbidden:
+            # from django.http import Http404, HttpResponseForbidden
+            # return HttpResponseForbidden("Você não tem permissão para visualizar esta galeria.")
+
+        # Se o usuário tem permissão, retorna o queryset filtrado para aquela galeria específica
+        return queryset.filter(pk=self.kwargs['pk'])
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -159,10 +195,6 @@ class GalleryCreateView(PhotographerRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.fotografo = self.request.user
         response = super().form_valid(form)
-        # As permissões do Guardian ainda são importantes para controle de acesso granular por objeto
-        # Manter assign_perm aqui se você quiser que o criador da galeria tenha permissões explícitas
-        # para a galeria que ele acabou de criar, mesmo que a lógica de acesso seja por grupo.
-        # Isso pode ser útil para cenários futuros ou para garantir a propriedade.
         assign_perm('view_galeria', self.request.user, self.object)
         assign_perm('change_galeria', self.request.user, self.object)
         assign_perm('delete_galeria', self.request.user, self.object)
@@ -176,17 +208,13 @@ class GalleryCreateView(PhotographerRequiredMixin, CreateView):
         return context
 
 
-# GalleryUpdateView agora usa apenas PhotographerRequiredMixin
 class GalleryUpdateView(PhotographerRequiredMixin, UpdateView):
     model = Galeria
     form_class = GalleryForm
     template_name = 'gallery_form.html'
     context_object_name = 'gallery'
 
-    # permission_required = 'core.change_galeria' # Removido
-
     def get_queryset(self):
-        # Garante que um fotógrafo só possa editar suas próprias galerias
         queryset = super().get_queryset()
         if not self.request.user.is_superuser:
             queryset = queryset.filter(fotografo=self.request.user)
@@ -202,17 +230,13 @@ class GalleryUpdateView(PhotographerRequiredMixin, UpdateView):
         return context
 
 
-# GalleryDeleteView agora usa apenas PhotographerRequiredMixin
 class GalleryDeleteView(PhotographerRequiredMixin, DeleteView):
     model = Galeria
     template_name = 'gallery_confirm_delete.html'
     context_object_name = 'gallery'
     success_url = reverse_lazy('photographer:gallery_list')
 
-    # permission_required = 'core.delete_galeria' # Removido
-
     def get_queryset(self):
-        # Garante que um fotógrafo só possa deletar suas próprias galerias
         queryset = super().get_queryset()
         if not self.request.user.is_superuser:
             queryset = queryset.filter(fotografo=self.request.user)
@@ -225,12 +249,10 @@ class GalleryDeleteView(PhotographerRequiredMixin, DeleteView):
 
 # --- Lógica de Upload de Múltiplas Imagens ---
 @method_decorator(require_POST, name='dispatch')
-# Removido o decorador object_permission_required, a permissão será verificada pela PhotographerRequiredMixin
 class ImageUploadView(PhotographerRequiredMixin, View):
     def post(self, request, pk):
         gallery = get_object_or_404(Galeria, pk=pk)
 
-        # Adicionado verificação para garantir que o fotógrafo só pode fazer upload em suas próprias galerias
         if not request.user.is_superuser and gallery.fotografo != request.user:
             return JsonResponse(
                 {'status': 'error', 'message': 'Você não tem permissão para fazer upload nesta galeria.'}, status=403)
@@ -243,39 +265,30 @@ class ImageUploadView(PhotographerRequiredMixin, View):
         uploaded_count = 0
         errors = []
 
-        # ALTERADO: O bloco transaction.atomic() foi movido para DENTRO do loop
-        # para que cada imagem seja processada em sua própria transação.
-        # Isso evita que o erro de uma imagem contamine toda a transação.
         for i, file in enumerate(files):
             try:
-                with transaction.atomic():  # Transação atômica para cada imagem
+                with transaction.atomic():
                     max_order = gallery.images.all().order_by(
                         '-order').first().order if gallery.images.exists() else -1
                     new_order = max_order + 1
 
-                    # NOVO: Sanitiza o nome do arquivo para remover caracteres não-ASCII
-                    # Isso evita o erro 'ascii' codec can't encode character
                     sanitized_file_name = unicodedata.normalize('NFKD', file.name).encode('ascii', 'ignore').decode(
                         'ascii')
-                    # Remove caracteres que ainda podem ser problemáticos (não alfanuméricos, espaços, pontos, hífens)
                     sanitized_file_name = re.sub(r'[^\w\s.-]', '', sanitized_file_name).strip()
-                    # Substitui múltiplos espaços por um único underscore (opcional, mas bom para nomes de arquivo)
                     sanitized_file_name = re.sub(r'\s+', '_', sanitized_file_name)
 
                     image_instance = Image.objects.create(
                         galeria=gallery,
                         image_file_original=file,
-                        original_file_name=sanitized_file_name,  # Usa o nome sanitizado
+                        original_file_name=sanitized_file_name,
                         order=new_order,
                     )
                     uploaded_count += 1
                     process_image_task.delay(image_instance.pk)
 
             except Exception as e:
-                # Captura erros individuais e os adiciona à lista de erros
                 errors.append(f"Erro ao salvar/disparar tarefa para imagem {file.name}: {e}")
 
-        # A lógica de resposta permanece a mesma, mas agora os erros são coletados de transações individuais
         if errors:
             return JsonResponse({'status': 'warning',
                                  'message': f"{uploaded_count} imagem(ns) enviada(s) com sucesso, mas houve erros no processamento de algumas: {'; '.join(errors)}"},
@@ -285,7 +298,6 @@ class ImageUploadView(PhotographerRequiredMixin, View):
                                  'message': f"{uploaded_count} imagem(ns) enviada(s) com sucesso para a galeria '{gallery.name}'. O processamento está ocorrendo em segundo plano."})
 
 
-# View para obter o progresso do upload
 class UploadProgressView(LoginRequiredMixin, View):
     login_url = reverse_lazy('accounts:login')
 
@@ -307,12 +319,10 @@ class UploadProgressView(LoginRequiredMixin, View):
 
 # --- Lógica de Reordenamento de Imagens ---
 @method_decorator(require_POST, name='dispatch')
-# Removido o decorador object_permission_required
 class ImageReorderView(PhotographerRequiredMixin, View):
     def post(self, request, pk):
         gallery = get_object_or_404(Galeria, pk=pk)
 
-        # Adicionado verificação para garantir que o fotógrafo só pode reordenar em suas próprias galerias
         if not request.user.is_superuser and gallery.fotografo != request.user:
             return JsonResponse(
                 {'status': 'error', 'message': 'Você não tem permissão para reordenar imagens nesta galeria.'},
@@ -340,12 +350,10 @@ class ImageReorderView(PhotographerRequiredMixin, View):
 
 # --- Lógica de Capa da Galeria ---
 @method_decorator(require_POST, name='dispatch')
-# Removido o decorador object_permission_required
 class SetGalleryCoverView(PhotographerRequiredMixin, View):
     def post(self, request, pk):
         gallery = get_object_or_404(Galeria, pk=pk)
 
-        # Adicionado verificação para garantir que o fotógrafo só pode definir capa em suas próprias galerias
         if not request.user.is_superuser and gallery.fotografo != request.user:
             return JsonResponse(
                 {'status': 'error', 'message': 'Você não tem permissão para definir a capa desta galeria.'}, status=403)
@@ -370,12 +378,10 @@ class SetGalleryCoverView(PhotographerRequiredMixin, View):
 
 # NOVO: View para Excluir Imagem Individualmente
 @method_decorator(require_POST, name='dispatch')
-# Removido o decorador object_permission_required
 class ImageDeleteView(PhotographerRequiredMixin, View):
     def post(self, request, gallery_pk, image_pk):
         gallery = get_object_or_404(Galeria, pk=gallery_pk)
 
-        # Adicionado verificação para garantir que o fotógrafo só pode deletar imagens em suas próprias galerias
         if not request.user.is_superuser and gallery.fotografo != request.user:
             return JsonResponse(
                 {'status': 'error', 'message': 'Você não tem permissão para excluir imagens desta galeria.'},
@@ -385,29 +391,22 @@ class ImageDeleteView(PhotographerRequiredMixin, View):
 
         try:
             with transaction.atomic():
-                # Antes de deletar a instância do banco de dados,
-                # deletamos os arquivos físicos associados.
-                # Verifica se o arquivo original existe e o deleta
                 if image_instance.image_file_original:
                     if os.path.exists(image_instance.image_file_original.path):
                         os.remove(image_instance.image_file_original.path)
 
-                # Verifica se o thumbnail existe e o deleta
                 if image_instance.image_file_thumb:
                     if os.path.exists(image_instance.image_file_thumb.path):
                         os.remove(image_instance.image_file_thumb.path)
 
-                # Verifica se a imagem com marca d'água existe e a deleta
                 if image_instance.image_file_watermarked:
                     if os.path.exists(image_instance.image_file_watermarked.path):
                         os.remove(image_instance.image_file_watermarked.path)
 
-                # Se a imagem era a capa da galeria, remove a referência
                 if gallery.cover_image == image_instance:
                     gallery.cover_image = None
                     gallery.save()
 
-                # Deleta a instância da imagem do banco de dados
                 image_instance.delete()
 
             return JsonResponse({'status': 'success', 'message': 'Imagem excluída com sucesso.'})

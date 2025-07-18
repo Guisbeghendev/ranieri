@@ -1,6 +1,4 @@
-# ranieri_project/core/signals.py
-
-from django.db.models.signals import post_save, m2m_changed # Importa m2m_changed
+from django.db.models.signals import post_save, post_delete, m2m_changed
 from django.dispatch import receiver
 from django.contrib.auth.models import Group # Importe Group
 from .models import User, AudienceGroup, Profile # Importar os modelos do app 'core'
@@ -25,16 +23,14 @@ def create_user_profile_and_add_to_groups(sender, instance, created, **kwargs):
         admin_group, _ = Group.objects.get_or_create(name='admin')
 
         # --- Criação e Associação do AudienceGroup 'membro' ---
-        # Garante que o AudienceGroup 'membro' exista e adiciona o usuário a ele
-        membro_audience_group, _ = AudienceGroup.objects.get_or_create(name='membro')
-        instance.audience_groups.add(membro_audience_group) # Adiciona ao AudienceGroup 'membro'
+        # Garante que o AudienceGroup 'membro' exista.
+        # A associação do usuário ao AudienceGroup 'membro' será feita via m2m_changed no User.groups.through
+        # ou pela lógica de sincronização de Group abaixo.
+        AudienceGroup.objects.get_or_create(name='membro', defaults={'description': "Grupo de audiência para membros padrão"})
 
-        # --- Criação dos AudienceGroups 'fotografo' e 'admin' ---
-        # Garante que o AudienceGroup 'fotografo' exista.
-        fotografo_audience_group, _ = AudienceGroup.objects.get_or_create(name='fotografo')
-
-        # Garante que o AudienceGroup 'admin' exista.
-        admin_audience_group, _ = AudienceGroup.objects.get_or_create(name='admin')
+        # Garante que os AudienceGroups 'fotografo' e 'admin' existam.
+        AudienceGroup.objects.get_or_create(name='fotografo', defaults={'description': "Grupo de audiência para fotógrafos"})
+        AudienceGroup.objects.get_or_create(name='admin', defaults={'description': "Grupo de audiência para administradores"})
 
 
 @receiver(post_save, sender=User)
@@ -58,21 +54,42 @@ def update_user_flags_on_group_change(sender, instance, action, pk_set, **kwargs
 
         # Lógica para is_staff (acesso ao painel admin)
         # Se o usuário está no grupo 'Admin', is_staff deve ser True. Caso contrário, False.
-        is_admin_group_member = user.groups.filter(name='Admin').exists()
+        is_admin_group_member = user.groups.filter(name='admin').exists() # Usar 'admin' (minúsculo)
         if user.is_staff != is_admin_group_member:
             user.is_staff = is_admin_group_member
             user.save(update_fields=['is_staff']) # Salva apenas o campo modificado
 
         # Lógica para is_photographer (flag customizada)
         # Se o usuário está no grupo 'Fotógrafo', is_photographer deve ser True. Caso contrário, False.
-        is_photographer_group_member = user.groups.filter(name='Fotógrafo').exists()
+        is_photographer_group_member = user.groups.filter(name='fotografo').exists() # Usar 'fotografo' (minúsculo)
 
-        # Verifica se a flag 'is_photographer' existe no modelo User customizado
-        # (Baseado em interações anteriores, assumimos que está no modelo User)
         if hasattr(user, 'is_photographer') and user.is_photographer != is_photographer_group_member:
             user.is_photographer = is_photographer_group_member
-            user.save(update_fields=['is_photographer']) # Salva apenas o campo modificado
-        # Se 'is_photographer' estiver no modelo Profile (caso alternativo, menos provável aqui)
+            user.save(update_fields=['is_photographer'])
         elif hasattr(user, 'profile') and hasattr(user.profile, 'is_photographer') and user.profile.is_photographer != is_photographer_group_member:
             user.profile.is_photographer = is_photographer_group_member
-            user.profile.save(update_fields=['is_photographer']) # Salva apenas o campo modificado
+            user.profile.save(update_fields=['is_photographer'])
+
+# NOVO: Sinais para sincronizar auth.Group com core.AudienceGroup
+@receiver(post_save, sender=Group)
+def sync_auth_group_to_audience_group(sender, instance, created, **kwargs):
+    """
+    Cria ou atualiza um core.AudienceGroup quando um auth.Group é salvo.
+    Se o auth.Group é criado, cria um AudienceGroup correspondente.
+    Se o auth.Group é atualizado, garante que um AudienceGroup com o mesmo nome exista.
+    """
+    AudienceGroup.objects.get_or_create(
+        name=instance.name,
+        defaults={'description': f"Grupo de audiência para {instance.name}"}
+    )
+
+@receiver(post_delete, sender=Group)
+def delete_audience_group_on_auth_group_delete(sender, instance, **kwargs):
+    """
+    Deleta o core.AudienceGroup correspondente quando um auth.Group é deletado.
+    """
+    try:
+        audience_group = AudienceGroup.objects.get(name=instance.name)
+        audience_group.delete()
+    except AudienceGroup.DoesNotExist:
+        pass # Já deletado ou nunca existiu
