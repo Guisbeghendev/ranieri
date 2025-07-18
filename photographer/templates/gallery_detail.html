@@ -1,366 +1,362 @@
-    {% extends 'base.html' %}
-    {% load static %}
+{% extends 'base.html' %}
+{% load static %}
 
-    {% block title %}Detalhes da Galeria: {{ gallery.name }} - {{ project_name }}{% endblock %} {# LINHA 3 CORRIGIDA #}
+{% block title %}Detalhes da Galeria: {{ gallery.name }} - {{ project_name }}{% endblock %}
 
-    {% block content %}
-    <div class="bg-white p-6 rounded-lg shadow-md mb-6">
-        <div class="flex flex-col sm:flex-row justify-between items-center mb-4"> {# Adicionado flex-col para empilhar em mobile #}
-            <h1 class="text-3xl font-bold text-gray-800 mb-4 sm:mb-0">{{ gallery.name }}</h1> {# Adicionado mb-4 sm:mb-0 #}
-            <div class="flex flex-wrap gap-2 justify-end sm:justify-start"> {# Ajustado para flex-wrap e gap #}
-                <a href="{% url 'photographer:gallery_edit' gallery.pk %}" class="px-5 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition duration-300">Editar Galeria</a>
-                <a href="{% url 'photographer:gallery_list' %}" class="px-5 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition duration-300">Voltar para Galerias</a>
-            </div>
+{% block content %}
+<div class="bg-white p-6 rounded-lg shadow-md mb-6">
+    <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
+        <h1 class="text-3xl font-bold text-gray-800 mb-4 sm:mb-0">{{ gallery.name }}</h1>
+        <div class="flex flex-wrap gap-2 justify-end sm:justify-start">
+            <a href="{% url 'photographer:gallery_edit' gallery.pk %}" class="px-5 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition duration-300">Editar Galeria</a>
+            <a href="{% url 'photographer:gallery_list' %}" class="px-5 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition duration-300">Voltar para Galerias</a>
         </div>
-
-        <p class="text-gray-700 mb-2"><strong>Descrição:</strong> {{ gallery.description|default:"Nenhuma descrição." }}</p>
-        <p class="text-gray-700 mb-2"><strong>Data do Evento:</strong> {{ gallery.event_date|date:"d/m/Y"|default:"Não especificada" }}</p>
-        <p class="text-gray-700 mb-2"><strong>Pública:</strong>
-            {% if gallery.is_public %}
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Sim</span>
-            {% else %}
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Não</span>
-            {% endif %}
-        </p>
-        <p class="text-gray-700 mb-2"><strong>Fotógrafo:</strong> {{ gallery.fotografo.username }}</p>
-        <p class="text-gray-700 mb-4"><strong>Grupos de Audiência:</strong>
-            {% if gallery.audience_groups.all %}
-                {% for group in gallery.audience_groups.all %}
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-1">{{ group.name }}</span>
-                {% endfor %}
-            {% else %}
-                Nenhum grupo associado.
-            {% endif %}
-        </p>
     </div>
 
-    <div class="bg-white p-6 rounded-lg shadow-md mb-6">
-        <h2 class="text-2xl font-bold text-gray-800 mb-4">Imagens da Galeria</h2>
+    <p class="text-gray-700 mb-2"><strong>Descrição:</strong> {{ gallery.description|default:"Nenhuma descrição." }}</p>
+    <p class="text-gray-700 mb-2"><strong>Data do Evento:</strong> {{ gallery.event_date|date:"d/m/Y"|default:"Não especificada" }}</p>
+    <p class="text-gray-700 mb-2"><strong>Pública:</strong>
+        {% if gallery.is_public %}
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Sim</span>
+        {% else %}
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Não</span>
+        {% endif %}
+    </p>
+    <p class="text-gray-700 mb-2"><strong>Fotógrafo:</strong> {{ gallery.fotografo.username }}</p>
+    <p class="text-gray-700 mb-4"><strong>Grupos de Audiência:</strong>
+        {% if gallery.audience_groups.all %}
+            {% for group in gallery.audience_groups.all %}
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-1">{{ group.name }}</span>
+            {% endfor %}
+        {% else %}
+            Nenhum grupo associado.
+        {% endif %}
+    </p>
+</div>
 
-        <!-- Formulário de Upload de Imagens -->
-        <form id="image-upload-form" action="{% url 'photographer:image_upload' gallery.pk %}" method="post" enctype="multipart/form-data" class="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
-            {% csrf_token %}
-            <label for="images" class="block text-sm font-medium text-gray-700 mb-2">Adicionar Novas Imagens:</label>
-            <input type="file" name="images" id="images" multiple accept="image/*" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
-            <button type="submit" class="mt-4 px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300 shadow-md">
-                Upload de Imagens
-            </button>
-        </form>
+<div class="bg-white p-6 rounded-lg shadow-md mb-6">
+    <h2 class="text-2xl font-bold text-gray-800 mb-4">Imagens da Galeria</h2>
 
-        <!-- Área de Progresso do Upload (oculta por padrão) -->
-        <div id="upload-progress-area" class="hidden mt-6 p-4 border border-blue-300 rounded-lg bg-blue-50">
-            <h3 class="text-lg font-semibold text-blue-800 mb-2">Progresso do Upload</h3>
-            <div class="w-full bg-gray-200 rounded-full h-2.5 mb-2">
-                <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%;"></div>
-            </div>
-            <p id="progress-text" class="text-sm text-blue-700">0% Concluído</p>
-            <p id="status-message" class="text-sm text-blue-700 mt-1">Aguardando arquivos...</p>
+    <!-- Formulário de Upload de Imagens -->
+    <form id="image-upload-form" action="{% url 'photographer:image_upload' gallery.pk %}" method="post" enctype="multipart/form-data" class="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+        {% csrf_token %}
+        <label for="images" class="block text-sm font-medium text-gray-700 mb-2">Adicionar Novas Imagens:</label>
+        <input type="file" name="images" id="images" multiple accept="image/*" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
+        <button type="submit" class="mt-4 px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300 shadow-md">
+            Upload de Imagens
+        </button>
+    </form>
+
+    <!-- Área de Progresso do Upload (oculta por padrão) -->
+    <div id="upload-progress-area" class="hidden mt-6 p-4 border border-blue-300 rounded-lg bg-blue-50">
+        <h3 class="text-lg font-semibold text-blue-800 mb-2">Progresso do Upload</h3>
+        <div class="w-full bg-gray-200 rounded-full h-2.5 mb-2">
+            <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%;"></div>
         </div>
+        <p id="progress-text" class="text-sm text-blue-700">0% Concluído</p>
+        <p id="status-message" class="text-sm text-blue-700 mt-1">Aguardando arquivos...</p>
+    </div>
 
-        {% if images %}
-        <div id="image-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {% for image in images %}
-            <div class="bg-gray-50 border border-gray-200 rounded-lg overflow-hidden shadow-sm relative group" data-image-id="{{ image.pk }}">
-                {% if image.image_file_thumb %}
-                    <img src="{{ image.image_file_thumb.url }}" alt="{{ image.original_file_name }}" class="w-full h-48 object-cover rounded-t-lg">
-                {% else %}
-                    <img src="{{ image.image_file_original.url }}" alt="{{ image.original_file_name }}" class="w-full h-48 object-cover rounded-t-lg">
-                {% endif %}
-                <div class="p-4">
-                    <p class="text-sm text-gray-800 font-medium truncate">{{ image.original_file_name }}</p>
-                    <p class="text-xs text-gray-600">Ordem: {{ image.order }}</p>
-                    <div class="mt-2 flex flex-col sm:flex-row gap-2 items-center sm:justify-between"> {# Ajustado para flex-col em mobile #}
-                        <button class="set-cover-btn px-3 py-1 bg-purple-500 text-white text-xs rounded-lg hover:bg-purple-600 transition duration-300 w-full sm:w-auto" data-image-id="{{ image.pk }}">Capa</button> {# Adicionado w-full sm:w-auto #}
-                        <!-- NOVO: Botão para deletar imagem individualmente -->
-                        <button class="delete-image-btn px-3 py-1 bg-red-500 text-white text-xs rounded-lg hover:bg-red-600 transition duration-300 w-full sm:w-auto" data-image-id="{{ image.pk }}">Excluir</button> {# Adicionado w-full sm:w-auto #}
-                    </div>
+    {% if images %}
+    <div id="image-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {% for image in images %}
+        <div class="bg-gray-50 border border-gray-200 rounded-lg overflow-hidden shadow-sm relative group" data-image-id="{{ image.pk }}">
+            {% if image.image_file_thumb %}
+                <img src="{{ image.image_file_thumb.url }}" alt="{{ image.original_file_name }}" class="w-full h-48 object-cover rounded-t-lg">
+            {% else %}
+                <img src="{{ image.image_file_original.url }}" alt="{{ image.original_file_name }}" class="w-full h-48 object-cover rounded-t-lg">
+            {% endif %}
+            <div class="p-4">
+                <p class="text-sm text-gray-800 font-medium truncate">{{ image.original_file_name }}</p>
+                <p class="text-xs text-gray-600">Ordem: {{ image.order }}</p>
+                <div class="mt-2 flex flex-col sm:flex-row gap-2 items-center sm:justify-between">
+                    <button class="set-cover-btn px-3 py-1 bg-purple-500 text-white text-xs rounded-lg hover:bg-purple-600 transition duration-300 w-full sm:w-auto" data-image-id="{{ image.pk }}">Capa</button>
+                    <button class="delete-image-btn px-3 py-1 bg-red-500 text-white text-xs rounded-lg hover:bg-red-600 transition duration-300 w-full sm:w-auto" data-image-id="{{ image.pk }}">Excluir</button>
                 </div>
             </div>
-            {% endfor %}
         </div>
-        <button id="save-reorder-btn" class="mt-6 px-6 py-3 bg-indigo-600 text-white rounded-lg shadow-lg hover:bg-indigo-700 transition duration-300 transform hover:scale-105">
-            Salvar Reordenamento
-        </button>
-        {% else %}
-        <p class="text-center text-gray-600 py-4">Nenhuma imagem nesta galeria ainda. Use o formulário acima para adicionar.</p>
-        {% endif %}
+        {% endfor %}
     </div>
+    <button id="save-reorder-btn" class="mt-6 px-6 py-3 bg-indigo-600 text-white rounded-lg shadow-lg hover:bg-indigo-700 transition duration-300 transform hover:scale-105">
+        Salvar Reordenamento
+    </button>
+    {% else %}
+    <p class="text-center text-gray-600 py-4">Nenhuma imagem nesta galeria ainda. Use o formulário acima para adicionar.</p>
+    {% endif %}
+</div>
 
-    <script>
-        // Função para exibir mensagens (substitui messages.success/error do Django para AJAX)
-        function showMessageBox(message, type) {
-            const messageContainer = document.createElement('div');
-            // Adicionadas classes left-4 right-4 mx-auto max-w-xs para melhor responsividade
-            messageContainer.className = `fixed top-4 left-4 right-4 mx-auto max-w-xs p-4 rounded-lg shadow-lg text-white z-50 text-center`;
-            if (type === 'success') {
-                messageContainer.classList.add('bg-green-500');
-            } else if (type === 'error') {
-                messageContainer.classList.add('bg-red-500');
-            } else if (type === 'warning') { // Adicionado tipo 'warning'
-                messageContainer.classList.add('bg-yellow-500');
-            }
-            messageContainer.textContent = message;
-            document.body.appendChild(messageContainer);
-
-            setTimeout(() => {
-                messageContainer.remove();
-            }, 5000); // Aumentado para 5 segundos para mensagens mais longas
+<script>
+    // Função para exibir mensagens (substitui messages.success/error do Django para AJAX)
+    function showMessageBox(message, type) {
+        const messageContainer = document.createElement('div');
+        messageContainer.className = `fixed top-4 left-4 right-4 mx-auto max-w-xs p-4 rounded-lg shadow-lg text-white z-50 text-center`;
+        if (type === 'success') {
+            messageContainer.classList.add('bg-green-500');
+        } else if (type === 'error') {
+            messageContainer.classList.add('bg-red-500');
+        } else if (type === 'warning') {
+            messageContainer.classList.add('bg-yellow-500');
         }
+        messageContainer.textContent = message;
+        document.body.appendChild(messageContainer);
 
-        // Lógica para Upload de Imagens com Progresso (usando XMLHttpRequest)
-        document.addEventListener('DOMContentLoaded', () => {
-            const uploadForm = document.getElementById('image-upload-form');
-            const fileInput = document.getElementById('images');
-            const progressBarArea = document.getElementById('upload-progress-area');
-            const progressBar = document.getElementById('progress-bar');
-            const progressText = document.getElementById('progress-text');
-            const statusMessage = document.getElementById('status-message');
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value; // Obter CSRF token
+        setTimeout(() => {
+            messageContainer.remove();
+        }, 10000); // Aumentado para 10 segundos
+    }
 
-            if (uploadForm) {
-                uploadForm.addEventListener('submit', (e) => {
-                    e.preventDefault();
+    // Lógica para Upload de Imagens com Progresso (usando XMLHttpRequest)
+    document.addEventListener('DOMContentLoaded', () => {
+        const uploadForm = document.getElementById('image-upload-form');
+        const fileInput = document.getElementById('images');
+        const progressBarArea = document.getElementById('upload-progress-area');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        const statusMessage = document.getElementById('status-message');
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-                    if (fileInput.files.length === 0) {
-                        showMessageBox("Por favor, selecione pelo menos uma imagem para upload.", "error");
-                        return;
+        if (uploadForm) {
+            uploadForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                if (fileInput.files.length === 0) {
+                    showMessageBox("Por favor, selecione pelo menos uma imagem para upload.", "error");
+                    return;
+                }
+
+                progressBarArea.classList.remove('hidden');
+                progressBar.style.width = '0%';
+                progressText.textContent = '0% Concluído';
+                statusMessage.textContent = 'Iniciando upload...';
+
+                const formData = new FormData(uploadForm);
+
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', uploadForm.action, true);
+                xhr.setRequestHeader('X-CSRFToken', csrfToken);
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+                xhr.upload.onprogress = function(event) {
+                    if (event.lengthComputable) {
+                        const percentage = Math.round((event.loaded / event.total) * 100);
+                        progressBar.style.width = `${percentage}%`;
+                        progressText.textContent = `${percentage}% Concluído`;
+                        statusMessage.textContent = `Enviando ${event.loaded} de ${event.total} bytes...`;
+                    }
+                };
+
+                xhr.onload = function() {
+                    progressBar.style.width = '100%';
+                    progressText.textContent = '100% Concluído';
+
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        try {
+                            const data = JSON.parse(xhr.responseText);
+                            if (data.status === 'success' || data.status === 'warning') {
+                                showMessageBox(data.message, data.status);
+                                statusMessage.textContent = 'Upload completo! Processamento em segundo plano...';
+                                setTimeout(() => {
+                                    window.location.reload();
+                                }, 1500);
+                            } else {
+                                showMessageBox(data.message || 'Erro desconhecido no upload.', 'error');
+                                statusMessage.textContent = 'Erro no upload.';
+                            }
+                        } catch (e) {
+                            console.error('Erro ao analisar resposta JSON:', e, xhr.responseText);
+                            showMessageBox('Erro ao processar resposta do servidor. Tente novamente.', 'error');
+                            statusMessage.textContent = 'Erro na resposta do servidor.';
+                        }
+                    } else {
+                        console.error('Erro HTTP durante o upload:', xhr.status, xhr.statusText, xhr.responseText);
+                        // Adicionado log da resposta do servidor para debugging
+                        console.error('Resposta do servidor:', xhr.responseText);
+                        showMessageBox(`Erro no servidor (${xhr.status}). Tente novamente. Detalhes no console.`, 'error');
+                        statusMessage.textContent = `Erro no servidor: ${xhr.status}`;
                     }
 
-                    progressBarArea.classList.remove('hidden');
-                    progressBar.style.width = '0%';
-                    progressText.textContent = '0% Concluído';
-                    statusMessage.textContent = 'Iniciando upload...';
-
-                    const formData = new FormData(uploadForm);
-
-                    const xhr = new XMLHttpRequest();
-                    xhr.open('POST', uploadForm.action, true);
-                    xhr.setRequestHeader('X-CSRFToken', csrfToken);
-                    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest'); // ADICIONADO: Indica que é uma requisição AJAX
-
-                    xhr.upload.onprogress = function(event) {
-                        if (event.lengthComputable) {
-                            const percentage = Math.round((event.loaded / event.total) * 100);
-                            progressBar.style.width = `${percentage}%`;
-                            progressText.textContent = `${percentage}% Concluído`;
-                            statusMessage.textContent = `Enviando ${event.loaded} de ${event.total} bytes...`;
-                        }
-                    };
-
-                    xhr.onload = function() {
-                        progressBar.style.width = '100%';
-                        progressText.textContent = '100% Concluído';
-
-                        if (xhr.status >= 200 && xhr.status < 300) {
-                            try {
-                                const data = JSON.parse(xhr.responseText);
-                                if (data.status === 'success' || data.status === 'warning') {
-                                    showMessageBox(data.message, data.status);
-                                    statusMessage.textContent = 'Upload completo! Processamento em segundo plano...';
-                                    setTimeout(() => {
-                                        window.location.reload();
-                                    }, 1500);
-                                } else {
-                                    showMessageBox(data.message || 'Erro desconhecido no upload.', 'error');
-                                    statusMessage.textContent = 'Erro no upload.';
-                                }
-                            } catch (e) {
-                                console.error('Erro ao analisar resposta JSON:', e, xhr.responseText);
-                                showMessageBox('Erro ao processar resposta do servidor. Tente novamente.', 'error');
-                                statusMessage.textContent = 'Erro na resposta do servidor.';
-                            }
-                        } else {
-                            console.error('Erro HTTP durante o upload:', xhr.status, xhr.statusText, xhr.responseText);
-                            showMessageBox(`Erro no servidor (${xhr.status}). Tente novamente.`, 'error');
-                            statusMessage.textContent = `Erro no servidor: ${xhr.status}`;
-                        }
-
-                        setTimeout(() => {
-                            progressBarArea.classList.add('hidden');
-                        }, 5000);
-                    };
-
-                    xhr.onerror = function() {
-                        console.error('Erro de rede durante o upload.');
-                        showMessageBox('Erro de rede. Verifique sua conexão e tente novamente.', 'error');
-                        statusMessage.textContent = 'Erro de rede.';
+                    setTimeout(() => {
                         progressBarArea.classList.add('hidden');
-                    };
+                    }, 5000);
+                };
 
-                    xhr.send(formData);
-                });
+                xhr.onerror = function() {
+                    console.error('Erro de rede durante o upload.');
+                    showMessageBox('Erro de rede. Verifique sua conexão e tente novamente.', 'error');
+                    statusMessage.textContent = 'Erro de rede.';
+                    progressBarArea.classList.add('hidden');
+                };
+
+                xhr.send(formData);
+            });
+        }
+    });
+
+
+    // Lógica para Reordenamento de Imagens (Drag and Drop)
+    const imageGrid = document.getElementById('image-grid');
+    const saveReorderBtn = document.getElementById('save-reorder-btn');
+    let draggedItem = null;
+
+    if (imageGrid) {
+        imageGrid.addEventListener('dragstart', (e) => {
+            draggedItem = e.target.closest('.group');
+            if (draggedItem) {
+                e.dataTransfer.setData('text/plain', draggedItem.dataset.imageId);
+                draggedItem.classList.add('opacity-50');
+                e.dataTransfer.effectAllowed = 'move';
             }
         });
 
+        imageGrid.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const target = e.target.closest('.group');
+            if (target && target !== draggedItem) {
+                const rect = target.getBoundingClientRect();
+                const next = (e.clientX - rect.left) / rect.width > 0.5;
+                imageGrid.insertBefore(draggedItem, next && target.nextSibling || target);
+            }
+        });
 
-        // Lógica para Reordenamento de Imagens (Drag and Drop)
-        const imageGrid = document.getElementById('image-grid');
-        const saveReorderBtn = document.getElementById('save-reorder-btn');
-        let draggedItem = null;
+        imageGrid.addEventListener('dragend', () => {
+            if (draggedItem) {
+                draggedItem.classList.remove('opacity-50');
+                draggedItem = null;
+                saveReorderBtn.classList.remove('hidden');
+            }
+        });
 
-        if (imageGrid) {
-            imageGrid.addEventListener('dragstart', (e) => {
-                draggedItem = e.target.closest('.group');
-                if (draggedItem) {
-                    e.dataTransfer.setData('text/plain', draggedItem.dataset.imageId);
-                    draggedItem.classList.add('opacity-50');
-                    e.dataTransfer.effectAllowed = 'move';
-                }
-            });
-
-            imageGrid.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                const target = e.target.closest('.group');
-                if (target && target !== draggedItem) {
-                    const rect = target.getBoundingClientRect();
-                    const next = (e.clientX - rect.left) / rect.width > 0.5;
-                    imageGrid.insertBefore(draggedItem, next && target.nextSibling || target);
-                }
-            });
-
-            imageGrid.addEventListener('dragend', () => {
-                if (draggedItem) {
-                    draggedItem.classList.remove('opacity-50');
-                    draggedItem = null;
-                    saveReorderBtn.classList.remove('hidden');
-                }
-            });
-
-            saveReorderBtn.addEventListener('click', async () => {
-                const imageOrder = Array.from(imageGrid.children).map(item => parseInt(item.dataset.imageId));
-                const galleryId = {{ gallery.pk }};
-                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-                try {
-                    const response = await fetch(`/photographer/galleries/${galleryId}/reorder/`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': csrfToken,
-                            'X-Requested-With': 'XMLHttpRequest' // ADICIONADO: Indica que é uma requisição AJAX
-                        },
-                        body: JSON.stringify({ image_ids: imageOrder })
-                    });
-
-                    const data = await response.json();
-                    if (response.ok) {
-                        showMessageBox(data.message, 'success');
-                    } else {
-                        showMessageBox(`Erro ao salvar reordenamento: ${data.message || response.statusText}`, 'error');
-                    }
-                } catch (error) {
-                    console.error('Erro ao enviar requisição de reordenamento:', error);
-                    showMessageBox('Erro de rede ou servidor ao tentar reordenar imagens.', 'error');
-                }
-            });
-        }
-
-        // Lógica para Definir Capa da Galeria
-        async function setCover(imageId) {
+        saveReorderBtn.addEventListener('click', async () => {
+            const imageOrder = Array.from(imageGrid.children).map(item => parseInt(item.dataset.imageId));
             const galleryId = {{ gallery.pk }};
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
             try {
-                const response = await fetch(`/photographer/galleries/${galleryId}/set_cover/`, {
+                const response = await fetch(`/photographer/galleries/${galleryId}/reorder/`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRFToken': csrfToken,
-                        'X-Requested-With': 'XMLHttpRequest' // ADICIONADO: Indica que é uma requisição AJAX
+                        'X-Requested-With': 'XMLHttpRequest'
                     },
-                    body: JSON.stringify({ image_id: imageId })
+                    body: JSON.stringify({ image_ids: imageOrder })
                 });
 
                 const data = await response.json();
                 if (response.ok) {
                     showMessageBox(data.message, 'success');
-                    // Opcional: Atualizar UI para mostrar qual imagem é a capa
                 } else {
-                    showMessageBox(`Erro ao definir capa: ${data.message || response.statusText}`, 'error');
+                    showMessageBox(`Erro ao salvar reordenamento: ${data.message || response.statusText}`, 'error');
                 }
             } catch (error) {
-                console.error('Erro ao enviar requisição de capa:', error);
-                showMessageBox('Erro de rede ou servidor ao tentar definir capa.', 'error');
+                console.error('Erro ao enviar requisição de reordenamento:', error);
+                showMessageBox('Erro de rede ou servidor ao tentar reordenar imagens.', 'error');
             }
-        }
+        });
+    }
 
-        // Lógica para Excluir Imagem Individualmente
-        async function deleteImage(imageId, galleryId) {
-            // Substituído window.confirm por um modal simples com showMessageBox
-            const confirmDelete = await new Promise((resolve) => {
-                const confirmationBox = document.createElement('div');
-                confirmationBox.className = `fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl z-[100] text-center max-w-sm w-full`;
-                confirmationBox.innerHTML = `
-                    <p class="text-lg font-semibold mb-4 text-gray-800">Tem certeza que deseja excluir esta imagem?</p>
-                    <p class="text-sm text-gray-600 mb-6">Esta ação é irreversível.</p>
-                    <div class="flex justify-center space-x-4">
-                        <button id="confirm-yes" class="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-300">Sim, Excluir</button>
-                        <button id="confirm-no" class="px-5 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition duration-300">Cancelar</button>
-                    </div>
-                `;
-                document.body.appendChild(confirmationBox);
+    // Lógica para Definir Capa da Galeria
+    async function setCover(imageId) {
+        const galleryId = {{ gallery.pk }};
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-                document.getElementById('confirm-yes').onclick = () => {
-                    confirmationBox.remove();
-                    resolve(true);
-                };
-                document.getElementById('confirm-no').onclick = () => {
-                    confirmationBox.remove();
-                    resolve(false);
-                };
+        try {
+            const response = await fetch(`/photographer/galleries/${galleryId}/set_cover/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ image_id: imageId })
             });
 
-            if (!confirmDelete) {
-                return; // Usuário cancelou
+            const data = await response.json();
+            if (response.ok) {
+                showMessageBox(data.message, 'success');
+            } else {
+                showMessageBox(`Erro ao definir capa: ${data.message || response.statusText}`, 'error');
             }
+        } catch (error) {
+            console.error('Erro ao enviar requisição de capa:', error);
+            showMessageBox('Erro de rede ou servidor ao tentar definir capa.', 'error');
+        }
+    }
 
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    // Lógica para Excluir Imagem Individualmente
+    async function deleteImage(imageId, galleryId) {
+        const confirmDelete = await new Promise((resolve) => {
+            const confirmationBox = document.createElement('div');
+            confirmationBox.className = `fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl z-[100] text-center max-w-sm w-full`;
+            confirmationBox.innerHTML = `
+                <p class="text-lg font-semibold mb-4 text-gray-800">Tem certeza que deseja excluir esta imagem?</p>
+                <p class="text-sm text-gray-600 mb-6">Esta ação é irreversível.</p>
+                <div class="flex justify-center space-x-4">
+                    <button id="confirm-yes" class="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-300">Sim, Excluir</button>
+                    <button id="confirm-no" class="px-5 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition duration-300">Cancelar</button>
+                </div>
+            `;
+            document.body.appendChild(confirmationBox);
 
-            try {
-                const response = await fetch(`/photographer/galleries/${galleryId}/images/${imageId}/delete/`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': csrfToken, // Apenas o CSRF token é necessário para POST simples
-                        'X-Requested-With': 'XMLHttpRequest' // ADICIONADO: Indica que é uma requisição AJAX
-                    },
-                });
+            document.getElementById('confirm-yes').onclick = () => {
+                confirmationBox.remove();
+                resolve(true);
+            };
+            document.getElementById('confirm-no').onclick = () => {
+                confirmationBox.remove();
+                resolve(false);
+            };
+        });
 
-                const data = await response.json();
-                if (response.ok) {
-                    showMessageBox(data.message, 'success');
-                    // Remove a imagem da UI
-                    const imageElement = document.querySelector(`div[data-image-id="${imageId}"]`);
-                    if (imageElement) {
-                        imageElement.remove();
-                    }
-                } else {
-                    showMessageBox(`Erro ao excluir imagem: ${data.message || response.statusText}`, 'error');
+        if (!confirmDelete) {
+            return;
+        }
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        try {
+            const response = await fetch(`/photographer/galleries/${galleryId}/images/${imageId}/delete/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                showMessageBox(data.message, 'success');
+                const imageElement = document.querySelector(`div[data-image-id="${imageId}"]`);
+                if (imageElement) {
+                    imageElement.remove();
                 }
-            } catch (error) {
-                console.error('Erro ao enviar requisição de exclusão:', error);
-                showMessageBox('Erro de rede ou servidor ao tentar excluir imagem.', 'error');
+            } else {
+                showMessageBox(`Erro ao excluir imagem: ${data.message || response.statusText}`, 'error');
             }
+        } catch (error) {
+            console.error('Erro ao enviar requisição de exclusão:', error);
+            showMessageBox('Erro de rede ou servidor ao tentar excluir imagem.', 'error');
         }
+    }
 
-        // ANEXAR EVENT LISTENERS AOS BOTÕES DE CAPA E EXCLUIR APÓS O CARREGAMENTO DO DOM
-        document.addEventListener('DOMContentLoaded', () => {
-            const setCoverButtons = document.querySelectorAll('.set-cover-btn');
-            setCoverButtons.forEach(button => {
-                button.addEventListener('click', (event) => {
-                    const imageId = parseInt(event.target.dataset.imageId);
-                    setCover(imageId);
-                });
-            });
-
-            // NOVO: Anexar event listeners aos botões de exclusão
-            const deleteImageButtons = document.querySelectorAll('.delete-image-btn');
-            deleteImageButtons.forEach(button => {
-                button.addEventListener('click', (event) => {
-                    const imageId = parseInt(event.target.dataset.imageId);
-                    const galleryId = {{ gallery.pk }}; // Pega o PK da galeria do contexto do template
-                    deleteImage(imageId, galleryId);
-                });
+    // ANEXAR EVENT LISTENERS AOS BOTÕES DE CAPA E EXCLUIR APÓS O CARREGAMENTO DO DOM
+    document.addEventListener('DOMContentLoaded', () => {
+        const setCoverButtons = document.querySelectorAll('.set-cover-btn');
+        setCoverButtons.forEach(button => {
+            button.addEventListener('click', (event) => {
+                const imageId = parseInt(event.target.dataset.imageId);
+                setCover(imageId);
             });
         });
-    </script>
-    {% endblock %}
+
+        const deleteImageButtons = document.querySelectorAll('.delete-image-btn');
+        deleteImageButtons.forEach(button => {
+            button.addEventListener('click', (event) => {
+                const imageId = parseInt(event.target.dataset.imageId);
+                const galleryId = {{ gallery.pk }};
+                deleteImage(imageId, galleryId);
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -3,7 +3,54 @@
 
 {% block title %}Meu painel - {{ user.username }} - {{ project_name }}{% endblock %}
 
-<!-- proibido apagar qualquer comentario desse codigo -->
+{% block extra_head %}
+    <!-- Swiper CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+    <style>
+        /* Estilos adicionais para o Swiper, se necessário */
+        .swiper-container {
+            width: 100%;
+            padding-bottom: 20px; /* Espaço para paginação */
+        }
+        .swiper-slide {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column; /* Para alinhar título do grupo e galerias */
+            padding: 10px; /* Espaçamento interno do slide */
+        }
+        .swiper-pagination-bullet-active {
+            background-color: #8B5CF6 !important; /* Cor roxa1 para o bullet ativo */
+        }
+        /* Oculta os botões de navegação por padrão e mostra apenas em telas maiores */
+        .swiper-button-next, .swiper-button-prev {
+            color: #8B5CF6; /* Cor roxa1 para os botões */
+            display: none; /* Oculta por padrão */
+        }
+        @media (min-width: 768px) { /* Mostra em telas médias e maiores */
+            .swiper-button-next, .swiper-button-prev {
+                display: block;
+            }
+        }
+        /* Estilos para o grid de galerias dentro do slide */
+        .gallery-grid-in-slide {
+            display: grid;
+            grid-template-columns: repeat(1, minmax(0, 1fr)); /* Uma coluna por padrão (mobile) */
+            gap: 1rem; /* Espaçamento entre as galerias */
+            width: 100%; /* Ocupa a largura total do slide */
+        }
+        @media (min-width: 640px) { /* Em sm e maiores, 2 colunas */
+            .gallery-grid-in-slide {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+        @media (min-width: 1024px) { /* Em lg e maiores, 3 colunas */
+            .gallery-grid-in-slide {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+    </style>
+{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
@@ -102,26 +149,63 @@
             <h2 class="text-2xl font-semibold text-roxo1 mb-4">Suas Últimas Galerias Privadas</h2>
             <!-- Conteúdo dinâmico das galerias privadas -->
             {% if latest_galleries_by_group %}
-                {% for group_name, galleries in latest_galleries_by_group.items %}
-                    <h3 class="text-xl font-semibold text-roxo1 mt-4 mb-2">{{ group_name }}</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-                        {% for gallery in galleries %}
-                            <div class="bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition duration-300">
-                                <a href="{% url 'galleries:client_gallery_detail' gallery.pk %}"> {# Assumindo uma URL para detalhes de galeria privada #}
-                                    {% if gallery.cover_image and gallery.cover_image.image_file_thumb %}
-                                        <img src="{{ gallery.cover_image.image_file_thumb.url }}" alt="Capa da Galeria: {{ gallery.name }}" class="w-full h-48 object-cover">
-                                    {% else %}
-                                        <img src="https://placehold.co/600x400/cccccc/333333?text=Sem+Capa" alt="Sem Imagem de Capa" class="w-full h-48 object-cover">
-                                    {% endif %}
-                                    <div class="p-4">
-                                        <h3 class="text-lg font-semibold text-gray-800 mb-1">{{ gallery.name }}</h3>
-                                        <p class="text-sm text-gray-600">{{ gallery.event_date|date:"d/m/Y" }}</p>
-                                    </div>
-                                </a>
+                <!-- Swiper Container para telas pequenas (exibe um grupo por slide) -->
+                <div class="md:hidden swiper-container mySwiperPrivateGalleries">
+                    <div class="swiper-wrapper">
+                        {% for group_name, galleries in latest_galleries_by_group.items %}
+                            <div class="swiper-slide">
+                                <h3 class="text-xl font-semibold text-roxo1 mb-2">{{ group_name }}</h3>
+                                <div class="gallery-grid-in-slide"> {# Usando a nova classe para grid responsivo #}
+                                    {% for gallery in galleries %}
+                                        <div class="bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition duration-300">
+                                            <a href="{% url 'galleries:client_gallery_detail' gallery.pk %}">
+                                                {% if gallery.cover_image and gallery.cover_image.image_file_thumb %}
+                                                    <img src="{{ gallery.cover_image.image_file_thumb.url }}" alt="Capa da Galeria: {{ gallery.name }}" class="w-full h-48 object-cover">
+                                                {% else %}
+                                                    <img src="https://placehold.co/600x400/cccccc/333333?text=Sem+Capa" alt="Sem Imagem de Capa" class="w-full h-48 object-cover">
+                                                {% endif %}
+                                                <div class="p-4">
+                                                    <h3 class="text-lg font-semibold text-gray-800 mb-1">{{ gallery.name }}</h3>
+                                                    <p class="text-sm text-gray-600">{{ gallery.event_date|date:"d/m/Y" }}</p>
+                                                </div>
+                                            </a>
+                                        </div>
+                                    {% endfor %}
+                                </div>
                             </div>
                         {% endfor %}
                     </div>
-                {% endfor %}
+                    <!-- Add Pagination -->
+                    <div class="swiper-pagination"></div>
+                    <!-- Add Navigation (opcional, visível em telas maiores) -->
+                    <div class="swiper-button-next"></div>
+                    <div class="swiper-button-prev"></div>
+                </div>
+
+                <!-- Layout de Grade para telas médias e grandes (mantém o comportamento original) -->
+                <div class="hidden md:block">
+                    {% for group_name, galleries in latest_galleries_by_group.items %}
+                        <h3 class="text-xl font-semibold text-roxo1 mt-4 mb-2">{{ group_name }}</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                            {% for gallery in galleries %}
+                                <div class="bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition duration-300">
+                                    <a href="{% url 'galleries:client_gallery_detail' gallery.pk %}">
+                                        {% if gallery.cover_image and gallery.cover_image.image_file_thumb %}
+                                            <img src="{{ gallery.cover_image.image_file_thumb.url }}" alt="Capa da Galeria: {{ gallery.name }}" class="w-full h-48 object-cover">
+                                        {% else %}
+                                            <img src="https://placehold.co/600x400/cccccc/333333?text=Sem+Capa" alt="Sem Imagem de Capa" class="w-full h-48 object-cover">
+                                        {% endif %}
+                                        <div class="p-4">
+                                            <h3 class="text-lg font-semibold text-gray-800 mb-1">{{ gallery.name }}</h3>
+                                            <p class="text-sm text-gray-600">{{ gallery.event_date|date:"d/m/Y" }}</p>
+                                        </div>
+                                    </a>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+
                 <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mt-6">
                     <!-- Botão: Fundo Roxo2, Letra Branco1 -->
                     <a href="{% url 'galleries:client_group_list' %}" class="px-6 py-3 bg-roxo2 text-branco1 rounded-lg shadow-md hover:bg-roxo1 transition duration-300 w-full sm:w-auto text-center">
@@ -191,4 +275,35 @@
 
     </div> {# Fim do grid principal #}
 </div>
+
+<!-- Swiper JS -->
+<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inicializa o Swiper para o carrossel de galerias privadas
+        // Ele só será visível em telas pequenas e médias devido ao Tailwind 'md:hidden'
+        if (window.innerWidth < 768) { // Inicializa apenas se a tela for menor que 'md' breakpoint
+            new Swiper('.mySwiperPrivateGalleries', {
+                slidesPerView: 1, // Exibe 1 slide por vez (cada slide é um grupo)
+                spaceBetween: 10,
+                pagination: {
+                    el: '.swiper-pagination',
+                    clickable: true,
+                },
+                navigation: {
+                    nextEl: '.swiper-button-next',
+                    prevEl: '.swiper-button-prev',
+                },
+                // Desabilita o Swiper em telas maiores se for necessário
+                // (embora a visibilidade seja controlada pelo Tailwind)
+                breakpoints: {
+                    768: {
+                        enabled: false,
+                        // destroy: true, // Descomente para destruir o swiper em telas maiores
+                    }
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}
