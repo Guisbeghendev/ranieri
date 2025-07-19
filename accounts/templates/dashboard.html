@@ -5,22 +5,46 @@
 
 {% block extra_head %}
     <style>
-        /* Estilos para o layout de grade das galerias (visível em todas as telas) */
-        .gallery-grid {
+        /* Estilos para o layout de grade das galerias (para telas médias/grandes) */
+        .gallery-grid-desktop {
             display: grid;
-            grid-template-columns: repeat(1, minmax(0, 1fr)); /* Uma coluna por padrão (mobile) */
-            gap: 1rem; /* Espaçamento entre as galerias */
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+            gap: 1rem;
             margin-top: 1rem;
         }
         @media (min-width: 640px) { /* Em sm e maiores, 2 colunas */
-            .gallery-grid {
+            .gallery-grid-desktop {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
         }
         @media (min-width: 1024px) { /* Em lg e maiores, 3 colunas */
-            .gallery-grid {
+            .gallery-grid-desktop {
                 grid-template-columns: repeat(3, minmax(0, 1fr));
             }
+        }
+
+        /* Estilos para rolagem horizontal em telas pequenas (mobile) */
+        .horizontal-scroll-container {
+            display: flex;
+            overflow-x: auto; /* Permite rolagem horizontal */
+            -webkit-overflow-scrolling: touch; /* Rolagem suave em iOS */
+            padding-bottom: 1rem; /* Espaço para a barra de rolagem se visível */
+            gap: 1rem; /* Espaçamento entre as galerias */
+        }
+        /* Esconde a barra de rolagem padrão, mas mantém a funcionalidade */
+        .horizontal-scroll-container::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+        }
+        .horizontal-scroll-container {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+
+        /* Garante que os itens dentro do contêiner de rolagem não encolham e tenham largura fixa */
+        .horizontal-scroll-item {
+            flex-shrink: 0; /* Impede que o item encolha */
+            width: 250px; /* Largura fixa para cada item da galeria no scroll */
+            /* Você pode ajustar esta largura conforme a necessidade do design mobile */
         }
     </style>
 {% endblock %}
@@ -124,7 +148,28 @@
             {% if latest_galleries_by_group %}
                 {% for group_name, galleries in latest_galleries_by_group.items %}
                     <h3 class="text-xl font-semibold text-roxo1 mt-4 mb-2">{{ group_name }}</h3>
-                    <div class="gallery-grid"> {# Usa a classe de grade para todas as telas #}
+
+                    {# Layout para telas pequenas: Rolagem horizontal #}
+                    <div class="md:hidden horizontal-scroll-container">
+                        {% for gallery in galleries %}
+                            <div class="bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition duration-300 horizontal-scroll-item">
+                                <a href="{% url 'galleries:client_gallery_detail' gallery.pk %}">
+                                    {% if gallery.cover_image and gallery.cover_image.image_file_thumb %}
+                                        <img src="{{ gallery.cover_image.image_file_thumb.url }}" alt="Capa da Galeria: {{ gallery.name }}" class="w-full h-48 object-cover">
+                                    {% else %}
+                                        <img src="https://placehold.co/600x400/cccccc/333333?text=Sem+Capa" alt="Sem Imagem de Capa" class="w-full h-48 object-cover">
+                                    {% endif %}
+                                    <div class="p-4">
+                                        <h3 class="text-lg font-semibold text-gray-800 mb-1">{{ gallery.name }}</h3>
+                                        <p class="text-sm text-gray-600">{{ gallery.event_date|date:"d/m/Y" }}</p>
+                                    </div>
+                                </a>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    {# Layout para telas médias e grandes: Grade responsiva #}
+                    <div class="hidden md:block gallery-grid-desktop">
                         {% for gallery in galleries %}
                             <div class="bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition duration-300">
                                 <a href="{% url 'galleries:client_gallery_detail' gallery.pk %}">
