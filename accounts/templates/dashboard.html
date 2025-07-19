@@ -28,6 +28,31 @@
             width: 250px; /* Largura fixa para cada item da galeria no scroll */
             /* Você pode ajustar esta largura conforme a necessidade do design mobile */
         }
+
+        /* Estilos para o layout de grade em telas médias e grandes (que não usam rolagem horizontal) */
+        /* Aplicamos flexbox no contêiner e larguras percentuais nos itens */
+        .desktop-gallery-flex-grid {
+            display: flex;
+            flex-wrap: wrap; /* Permite que os itens quebrem para a próxima linha */
+            gap: 1rem; /* Espaçamento entre os itens */
+            margin-top: 1rem;
+        }
+        .desktop-gallery-flex-grid .gallery-item {
+            flex-basis: calc(100% - 1rem); /* 1 coluna em telas pequenas (se visível) */
+            max-width: calc(100% - 1rem);
+        }
+        @media (min-width: 640px) { /* Em sm e maiores, 2 colunas */
+            .desktop-gallery-flex-grid .gallery-item {
+                flex-basis: calc(50% - 0.5rem); /* 2 colunas (50% - metade do gap) */
+                max-width: calc(50% - 0.5rem);
+            }
+        }
+        @media (min-width: 1024px) { /* Em lg e maiores, 3 colunas */
+            .desktop-gallery-flex-grid .gallery-item {
+                flex-basis: calc(33.333% - 0.666rem); /* 3 colunas (1/3 - 2/3 do gap) */
+                max-width: calc(33.333% - 0.666rem);
+            }
+        }
     </style>
 {% endblock %}
 
@@ -150,10 +175,10 @@
                         {% endfor %}
                     </div>
 
-                    {# Layout para telas médias e grandes: Grade responsiva (AGORA IGUAL AO PÚBLICO) #}
-                    <div class="hidden md:block grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                    {# Layout para telas médias e grandes: Flexbox responsivo (AGORA IGUAL AO PÚBLICO) #}
+                    <div class="hidden md:flex flex-wrap gap-4 mt-4"> {# Alterado para flexbox #}
                         {% for gallery in galleries %}
-                            <div class="bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition duration-300">
+                            <div class="bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition duration-300 gallery-item"> {# Adicionada classe gallery-item #}
                                 <a href="{% url 'galleries:client_gallery_detail' gallery.pk %}">
                                     {% if gallery.cover_image and gallery.cover_image.image_file_thumb %}
                                         <img src="{{ gallery.cover_image.image_file_thumb.url }}" alt="Capa da Galeria: {{ gallery.name }}" class="w-full h-48 object-cover">
