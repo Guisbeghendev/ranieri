@@ -20,16 +20,6 @@
             flex-direction: row !important;
             box-sizing: content-box !important; /* Garante que o padding não afete a largura total */
         }
-        /* Garante que cada slide ocupe a largura total do seu container e não encolha */
-        .swiper-slide {
-            display: flex !important; /* Força flex para centralizar o conteúdo da galeria */
-            justify-content: center !important;
-            align-items: center !important;
-            flex-shrink: 0 !important; /* Impede que o slide encolha */
-            width: 100% !important; /* Garante que o slide ocupe 100% da largura do contêiner visível */
-            /* REMOVIDO: padding: 10px !important; - MOVIMENTADO PARA .gallery-item-in-slide */
-            box-sizing: border-box !important; /* Inclui padding e border no width */
-        }
         .swiper-pagination-bullet-active {
             background-color: #8B5CF6 !important; /* Cor roxa1 para o bullet ativo */
         }
