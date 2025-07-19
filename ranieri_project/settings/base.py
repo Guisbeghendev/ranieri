@@ -1,23 +1,24 @@
 import os
 from pathlib import Path
+from decouple import config # Importa config para ler variáveis de ambiente
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+# BASE_DIR agora aponta para a raiz do seu projeto Django (ranieri_project/)
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-s+1&_sn#vdu#u05^ldd4p21l3q-w!dx9@5u@a4s_)371q(=#^b'
+# A SECRET_KEY agora é lida de uma variável de ambiente.
+# Em desenvolvimento, você pode usar um valor padrão ou de um .env local.
+# Em produção, ela DEVE ser definida como uma variável de ambiente segura.
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-s+1&_sn#vdu#u05^ldd4p21l3q-w!dx9@5u@a4s_)371q(=#^b')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
-ALLOWED_HOSTS = ['escolajoseranieri.com.br', 'www.escolajoseranieri.com.br', '77.37.68.104']
+# ALLOWED_HOSTS será definido nos arquivos de ambiente específicos
+ALLOWED_HOSTS = []
+
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -37,10 +38,9 @@ INSTALLED_APPS = [
     'gremio',
     'simcozinha',
     'brindialogando',
-    # o 'admin' sera o admin nativo.
     # Bibliotecas externas
     'guardian', # Django Guardian
-    'widget_tweaks'
+    'widget_tweaks',
     # Outras bibliotecas para Celery, etc. serão adicionadas conforme configurarmos
 ]
 
@@ -62,13 +62,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
-
-AUTHENTICATION_BACKENDS = (
-    'django.contrib.auth.backends.ModelBackend', # default
-    'guardian.backends.ObjectPermissionBackend',
-)
-
 
 # Configurações para manipuladores de upload (sem ProgressBarUploadHandler)
 FILE_UPLOAD_HANDLERS = (
@@ -107,27 +100,8 @@ TEMPLATES = [
 WSGI_APPLICATION = 'ranieri_project.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'ranieri_db', # Nome do seu banco de dados MySQL
-        'USER': 'bdranieri', # Seu usuário MySQL
-        'PASSWORD': 'Gsp@ranieri2025', # Sua senha MySQL
-        'HOST': 'localhost', # Ou o IP do seu servidor MySQL ou 127.0.0.1
-        'PORT': '3306', # Porta padrão do MySQL
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        }
-    }
-}
-
-
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -146,19 +120,14 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
-
 LANGUAGE_CODE = 'pt-br' # Altere de 'en-us' para 'pt-br'
-
 TIME_ZONE = 'America/Sao_Paulo' # Altere de 'UTC' para o fuso horário de São Paulo
-
 USE_I18N = True
-
 USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
-
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'), # Onde seus arquivos estáticos de desenvolvimento estarão
@@ -169,7 +138,6 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'mediafiles' # Onde os uploads (galerias, avatares) serão salvos
 
 
-
 # Redirecionamento após login bem-sucedido
 LOGIN_REDIRECT_URL = 'accounts:dashboard'
 # URL para a página de login (usada por @login_required, etc.)
@@ -178,7 +146,6 @@ LOGIN_URL = 'accounts:login'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
@@ -187,12 +154,13 @@ ANONYMOUS_USER_NAME = 'AnonymousUser'
 ANONYMOUS_USER_ID = -1  # ou qualquer ID que não conflite com IDs de usuários reais
 
 
-# Configurações do Celery
-CELERY_BROKER_URL = 'redis://localhost:6379/0'  # URL do seu servidor Redis (porta padrão 6379, DB 0)
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0' # Opcional: para armazenar resultados de tarefas
-CELERY_ACCEPT_CONTENT = ['json'] # Conteúdo aceito para tarefas
-CELERY_TASK_SERIALIZER = 'json' # Serializador para tarefas
-CELERY_RESULT_SERIALIZER = 'json' # Serializador para resultados
-CELERY_TIMEZONE = 'America/Sao_Paulo' # Use o mesmo fuso horário do Django
-CELERY_TASK_TRACK_STARTED = True # Rastreia o estado 'STARTED' da tarefa
-CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True # Tenta reconectar ao broker na inicialização
+# Configurações do Celery (podem ser sobrescritas em dev/prod se necessário)
+CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='redis://localhost:6379/0')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'America/Sao_Paulo'
+CELERY_TASK_TRACK_STARTED = True
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+

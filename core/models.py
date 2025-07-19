@@ -241,3 +241,31 @@ class Image(models.Model):
         if is_new_image or (self.image_file_original and not self.image_file_thumb and not self.image_file_watermarked):
             transaction.on_commit(lambda: process_image_task.delay(self.pk))
             print(f"Disparada tarefa Celery para processar imagem {self.pk} (após commit da transação).")
+
+
+# --- NOVO MODELO: GaleriaLike (para registrar as curtidas) ---
+class GaleriaLike(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='gallery_likes',
+        verbose_name="Usuário"
+    )
+    galeria = models.ForeignKey(
+        'core.Galeria',
+        on_delete=models.CASCADE,
+        related_name='likes',
+        verbose_name="Galeria"
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Curtido Em")
+
+    class Meta:
+        verbose_name = 'Curtida de Galeria'
+        verbose_name_plural = 'Curtidas de Galerias'
+        # Garante que um usuário só pode curtir uma galeria uma única vez
+        unique_together = ('user', 'galeria')
+        ordering = ['-created_at'] # Ordena as curtidas pelas mais recentes
+
+    def __str__(self):
+        return f'{self.user.username} curtiu {self.galeria.name}'
+

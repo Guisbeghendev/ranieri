@@ -3,10 +3,11 @@
 import os
 import sys
 
-
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ranieri_project.settings')
+    # Define qual módulo de configurações o Django deve usar
+    # Se DJANGO_SETTINGS_MODULE não estiver definido, usa 'ranieri_project.settings.development' por padrão
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ranieri_project.settings.development')
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
@@ -20,3 +21,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

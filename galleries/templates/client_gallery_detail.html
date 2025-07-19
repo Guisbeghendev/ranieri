@@ -16,6 +16,31 @@
         <p class="text-cinza1 text-center text-sm">
             Criado em: {{ gallery.created_at|date:"d/m/Y H:i" }} | Última atualização: {{ gallery.updated_at|date:"d/m/Y H:i" }}
         </p>
+
+        {# --- SEÇÃO DE CURTIDAS --- #}
+        <div class="flex items-center justify-center mt-6">
+            <button id="like-button"
+                    data-gallery-id="{{ gallery.pk }}"
+                    data-liked="{{ user_has_liked|yesno:'true,false' }}"
+                    class="px-4 py-2 rounded-full flex items-center space-x-2 transition-colors duration-300
+                           {% if user_has_liked %}bg-red-500 text-white hover:bg-red-600{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %}">
+                <svg id="like-icon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    {% if user_has_liked %}
+                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                    {% else %}
+                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 00-5.656 5.656L10 17.657l6.828-6.829a4 4 0 00-5.656-5.656L10 6.343l-1.172-1.171a4 4 0 00-5.656 0z" clip-rule="evenodd"></path>
+                    {% endif %}
+                </svg>
+                <span id="likes-count" class="font-semibold">{{ gallery_likes_count }}</span>
+            </button>
+            {% if gallery_likes_count > 0 %}
+                <button id="view-likers-button" class="ml-4 text-roxo2 hover:underline" onclick="openLikersModal()">
+                    Ver quem curtiu
+                </button>
+            {% endif %}
+        </div>
+        {# --- FIM SEÇÃO DE CURTIDAS --- #}
+
     </div>
 
     <div class="text-center mb-8">
@@ -118,6 +143,24 @@
     </div>
 </div>
 
+{# NOVO: Modal para exibir quem curtiu #}
+<div id="likersModal" class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50 hidden p-4">
+    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto relative">
+        <h2 class="text-2xl font-bold text-roxo1 mb-4">Pessoas que curtiram (<span id="total-likers-count-modal">{{ total_likers_count }}</span>)</h2>
+        <button class="absolute top-3 right-3 text-gray-600 hover:text-gray-900 text-2xl" onclick="closeLikersModal()" aria-label="Fechar">
+            &times;
+        </button>
+        <ul id="likers-list" class="space-y-2 text-preto1">
+            {% for liker in gallery_likers %}
+                <li>{{ liker }}</li>
+            {% empty %}
+                <li>Ninguém curtiu ainda.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+
 {# Botão "Voltar ao Topo" #}
 <button id="backToTopBtn" class="fixed bottom-8 right-8 bg-roxo2 text-branco1 p-3 rounded-full shadow-lg hover:bg-roxo1 transition-colors duration-300 hidden" aria-label="Voltar ao Topo">
     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
@@ -138,18 +181,131 @@
         if (modalCaption && modalCaption.innerText.trim() === '') {
             modalCaption.classList.add('hidden');
         }
+
+        // --- Lógica de Curtidas (JS) ---
+        const likeButton = document.getElementById('like-button');
+        const likesCountSpan = document.getElementById('likes-count');
+        const likeIcon = document.getElementById('like-icon');
+        const galleryId = likeButton.dataset.galleryId;
+        let userHasLiked = likeButton.dataset.liked === 'true';
+
+        // Função para obter o token CSRF do cookie
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        likeButton.addEventListener('click', function() {
+            // Verifica se o usuário está logado (se o botão existe, ele já deve estar, mas é bom ter uma checagem)
+            if (!{{ request.user.is_authenticated|lower }}) {
+                alert('Você precisa estar logado para curtir uma galeria.');
+                window.location.href = "{% url 'accounts:login' %}"; // Redireciona para o login
+                return;
+            }
+
+            const csrftoken = getCookie('csrftoken');
+
+            fetch(`/galleries/${galleryId}/like/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                },
+                body: JSON.stringify({}) // Corpo vazio para POST simples
+            })
+            .then(response => response.json())
+            .then(data => {
+                userHasLiked = data.liked;
+                likesCountSpan.textContent = data.likes_count;
+
+                // Atualiza o ícone do coração
+                if (userHasLiked) {
+                    likeIcon.innerHTML = `<path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>`;
+                    likeButton.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+                    likeButton.classList.add('bg-red-500', 'text-white', 'hover:bg-red-600');
+                } else {
+                    likeIcon.innerHTML = `<path fill-rule="evenodd" d="M3.172 5.172a4 4 0 00-5.656 5.656L10 17.657l6.828-6.829a4 4 0 00-5.656-5.656L10 6.343l-1.172-1.171a4 4 0 00-5.656 0z" clip-rule="evenodd"></path>`;
+                    likeButton.classList.remove('bg-red-500', 'text-white', 'hover:bg-red-600');
+                    likeButton.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+                }
+
+                // Atualiza o botão "Ver quem curtiu" e o modal
+                const viewLikersButton = document.getElementById('view-likers-button');
+                if (data.likes_count > 0) {
+                    if (!viewLikersButton) { // Se o botão não existe, cria
+                        const newButton = document.createElement('button');
+                        newButton.id = 'view-likers-button';
+                        newButton.className = 'ml-4 text-roxo2 hover:underline';
+                        newButton.textContent = 'Ver quem curtiu';
+                        newButton.onclick = openLikersModal;
+                        likeButton.parentNode.insertBefore(newButton, likeButton.nextSibling);
+                    }
+                } else {
+                    if (viewLikersButton) { // Se o botão existe, remove
+                        viewLikersButton.remove();
+                    }
+                }
+                updateLikersModalContent(data.likers, data.total_likers_count);
+            })
+            .catch(error => {
+                console.error('Erro ao curtir/descurtir:', error);
+                alert('Ocorreu um erro ao processar sua curtida. Tente novamente.');
+            });
+        });
+
+        // Função para abrir o modal de quem curtiu
+        window.openLikersModal = function() {
+            document.getElementById('likersModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Impede o scroll do body
+        };
+
+        // Função para fechar o modal de quem curtiu
+        window.closeLikersModal = function() {
+            document.getElementById('likersModal').classList.add('hidden');
+            document.body.style.overflow = ''; // Restaura o scroll do body
+        };
+
+        // Função para atualizar o conteúdo do modal de quem curtiu
+        function updateLikersModalContent(likers, totalCount) {
+            const likersList = document.getElementById('likers-list');
+            const totalLikersCountModal = document.getElementById('total-likers-count-modal');
+            likersList.innerHTML = ''; // Limpa a lista existente
+
+            if (likers.length > 0) {
+                likers.forEach(liker => {
+                    const li = document.createElement('li');
+                    li.textContent = liker;
+                    likersList.appendChild(li);
+                });
+            } else {
+                const li = document.createElement('li');
+                li.textContent = 'Ninguém curtiu ainda.';
+                likersList.appendChild(li);
+            }
+            totalLikersCountModal.textContent = totalCount;
+        }
+
     });
 
-    // Função para abrir o modal com a imagem e a legenda (agora aceita o elemento clicado)
+    // Funções do modal de imagens (já existentes)
     function openModal(clickedElement) {
         currentImageIndex = parseInt(clickedElement.dataset.index);
-        updateModalImage(); // Atualiza a imagem e o estado dos botões
-
+        updateModalImage();
         document.getElementById('imageModal').classList.remove('hidden');
-        document.body.style.overflow = 'hidden'; // Impede o scroll do body quando o modal está aberto
+        document.body.style.overflow = 'hidden';
     }
 
-    // Função para atualizar a imagem no modal e o estado dos botões
     function updateModalImage() {
         const modalImage = document.getElementById('modalImage');
         const prevBtn = document.getElementById('prevBtn');
@@ -157,12 +313,10 @@
 
         modalImage.src = imageUrls[currentImageIndex];
 
-        // Habilita/desabilita botões de navegação
         prevBtn.style.display = (currentImageIndex === 0) ? 'none' : 'block';
         nextBtn.style.display = (currentImageIndex === imageUrls.length - 1) ? 'none' : 'block';
     }
 
-    // Função para mostrar a próxima imagem
     function showNextImage() {
         if (currentImageIndex < imageUrls.length - 1) {
             currentImageIndex++;
@@ -170,7 +324,6 @@
         }
     }
 
-    // Função para mostrar a imagem anterior
     function showPreviousImage() {
         if (currentImageIndex > 0) {
             currentImageIndex--;
@@ -178,40 +331,35 @@
         }
     }
 
-    // Função para fechar o modal
     function closeModal() {
         document.getElementById('imageModal').classList.add('hidden');
-        document.getElementById('modalImage').src = ''; // Limpa a imagem ao fechar
-        document.body.style.overflow = ''; // Restaura o scroll do body
+        document.getElementById('modalImage').src = '';
+        document.body.style.overflow = '';
     }
 
-    // Fechar modal ao clicar fora da imagem (mas dentro do modal)
     document.getElementById('imageModal').addEventListener('click', function(event) {
-        // Verifica se o clique foi no background do modal, não na imagem ou nos botões
-        if (event.target === this || event.target.tagName === 'IMG') { // Adicionado clique na imagem para fechar
+        if (event.target === this || event.target.tagName === 'IMG') {
             closeModal();
         }
     });
 
-    // Fechar modal com a tecla ESC e navegar com setas do teclado
     document.addEventListener('keydown', function(event) {
         if (document.getElementById('imageModal').classList.contains('hidden')) {
-            return; // Não faz nada se o modal não estiver aberto
+            return;
         }
         if (event.key === 'Escape') {
             closeModal();
-        } else if (event.key === 'ArrowRight') { // Navegar para a próxima com seta direita
+        } else if (event.key === 'ArrowRight') {
             showNextImage();
-        } else if (event.key === 'ArrowLeft') { // Navegar para a anterior com seta esquerda
+        } else if (event.key === 'ArrowLeft') {
             showPreviousImage();
         }
     });
 
-    // Lógica para o botão "Voltar ao Topo"
     const backToTopBtn = document.getElementById('backToTopBtn');
 
     window.addEventListener('scroll', () => {
-        if (window.scrollY > 300) { // Mostra o botão após rolar 300px
+        if (window.scrollY > 300) {
             backToTopBtn.classList.remove('hidden');
         } else {
             backToTopBtn.classList.add('hidden');
@@ -221,14 +369,12 @@
     backToTopBtn.addEventListener('click', () => {
         window.scrollTo({
             top: 0,
-            behavior: 'smooth' // Rolagem suave
+            behavior: 'smooth'
         });
     });
 
-    // Adiciona um listener para garantir que o modal se redimensione com a janela
     window.addEventListener('resize', () => {
         // Nada específico para redimensionar aqui, pois o CSS já lida com max-width/height
-        // Mas é um bom lugar para adicionar lógica se necessário para imagens responsivas complexas.
     });
 </script>
 {% endblock %}
