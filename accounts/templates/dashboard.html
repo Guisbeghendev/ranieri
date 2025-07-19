@@ -21,14 +21,13 @@
             flex-wrap: nowrap !important; /* Impede que os slides quebrem para a linha de baixo */
             box-sizing: content-box !important; /* Garante que o padding não afete a largura total */
         }
-        /* Garante que cada slide ocupe a largura total do seu container e não encolha */
+        /* Garante que cada slide não encolha e se ajuste ao conteúdo */
         .swiper-slide {
             display: flex !important; /* Força flex para centralizar o conteúdo da galeria */
             justify-content: center !important;
             align-items: center !important;
             flex-shrink: 0 !important; /* Impede que o slide encolha */
-            width: 100% !important; /* Garante que o slide ocupe 100% da largura do contêiner visível */
-            flex-basis: 100% !important; /* Garante que o slide tenha 100% da largura base */
+            /* REMOVIDO: width: 100% !important; e flex-basis: 100% !important; */
             box-sizing: border-box !important; /* Inclui padding e border no width */
             height: auto !important; /* Garante que a altura do slide se ajuste ao conteúdo */
             padding: 10px; /* Espaçamento interno do slide */
