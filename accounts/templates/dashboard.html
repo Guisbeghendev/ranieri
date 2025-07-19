@@ -4,53 +4,54 @@
 {% block title %}Meu painel - {{ user.username }} - {{ project_name }}{% endblock %}
 
 {% block extra_head %}
-    <!-- Swiper CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
     <style>
-        /* Estilos básicos para o Swiper */
-        .swiper-container {
-            width: 100%;
-            padding-bottom: 20px; /* Espaço para paginação */
-            margin-bottom: 20px; /* Espaço entre carrosséis de grupos diferentes */
-            overflow: hidden; /* Garante que o conteúdo fora do slide não seja visível */
+        /* Estilos para rolagem horizontal em telas pequenas (mobile) */
+        .horizontal-scroll-container {
+            display: flex;
+            overflow-x: auto; /* Permite rolagem horizontal */
+            -webkit-overflow-scrolling: touch; /* Rolagem suave em iOS */
+            padding-bottom: 1rem; /* Espaço para a barra de rolagem se visível */
+            gap: 1rem; /* Espaçamento entre as galerias */
         }
-        /* Força o swiper-wrapper a ser um flexbox horizontal */
-        .swiper-wrapper {
-            display: flex !important;
-            flex-direction: row !important;
-            flex-wrap: nowrap !important; /* Impede que os slides quebrem para a linha de baixo */
-            box-sizing: content-box !important; /* Garante que o padding não afete a largura total */
+        /* Esconde a barra de rolagem padrão, mas mantém a funcionalidade */
+        .horizontal-scroll-container::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
         }
-        /* Garante que cada slide não encolha e se ajuste ao conteúdo */
-        .swiper-slide {
-            display: flex !important; /* Força flex para centralizar o conteúdo da galeria */
-            justify-content: center !important;
-            align-items: center !important;
-            flex-shrink: 0 !important; /* Impede que o slide encolha */
-            /* REMOVIDO: width: 100% !important; e flex-basis: 100% !important; */
-            box-sizing: border-box !important; /* Inclui padding e border no width */
-            height: auto !important; /* Garante que a altura do slide se ajuste ao conteúdo */
-            padding: 10px; /* Espaçamento interno do slide */
-        }
-        .swiper-pagination-bullet-active {
-            background-color: #8B5CF6 !important; /* Cor roxa1 para o bullet ativo */
-        }
-        /* Oculta os botões de navegação por padrão e mostra apenas em telas maiores */
-        .swiper-button-next, .swiper-button-prev {
-            color: #8B5CF6; /* Cor roxa1 para os botões */
-            display: none; /* Oculta por padrão */
-        }
-        @media (min-width: 768px) { /* Mostra em telas médias e maiores */
-            .swiper-button-next, .swiper-button-prev {
-                display: block;
-            }
+        .horizontal-scroll-container {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
         }
 
-        /* Estilos para a galeria individual dentro de CADA slide (usada no carrossel) */
-        .gallery-item-in-slide {
-            width: 250px; /* Largura fixa para cada item da galeria no carrossel mobile */
+        /* Garante que os itens dentro do contêiner de rolagem não encolham e tenham largura fixa */
+        .horizontal-scroll-item {
             flex-shrink: 0; /* Impede que o item encolha */
+            width: 250px; /* Largura fixa para cada item da galeria no scroll */
             /* Você pode ajustar esta largura conforme a necessidade do design mobile */
+        }
+
+        /* Estilos para o layout de grade em telas médias e grandes (que não usam rolagem horizontal) */
+        /* Aplicamos flexbox no contêiner e larguras percentuais nos itens */
+        .desktop-gallery-flex-grid {
+            display: flex;
+            flex-wrap: wrap; /* Permite que os itens quebrem para a próxima linha */
+            gap: 1rem; /* Espaçamento entre os itens */
+            margin-top: 1rem;
+        }
+        .desktop-gallery-flex-grid .gallery-item {
+            flex-basis: calc(100% - 1rem); /* 1 coluna em telas pequenas (se visível) */
+            max-width: calc(100% - 1rem);
+        }
+        @media (min-width: 640px) { /* Em sm e maiores, 2 colunas */
+            .desktop-gallery-flex-grid .gallery-item {
+                flex-basis: calc(50% - 0.5rem); /* 2 colunas (50% - metade do gap) */
+                max-width: calc(50% - 0.5rem);
+            }
+        }
+        @media (min-width: 1024px) { /* Em lg e maiores, 3 colunas */
+            .desktop-gallery-flex-grid .gallery-item {
+                flex-basis: calc(33.333% - 0.666rem); /* 3 colunas (1/3 - 2/3 do gap) */
+                max-width: calc(33.333% - 0.666rem);
+            }
         }
     </style>
 {% endblock %}
@@ -155,37 +156,29 @@
                 {% for group_name, galleries in latest_galleries_by_group.items %}
                     <h3 class="text-xl font-semibold text-roxo1 mt-4 mb-2">{{ group_name }}</h3>
 
-                    {# Layout para telas pequenas: Carrossel #}
-                    <div class="md:hidden swiper-container group-swiper-{{ forloop.counter }}">
-                        <div class="swiper-wrapper">
-                            {% for gallery in galleries %}
-                                <div class="swiper-slide"> {# AGORA CADA GALERIA É UM SLIDE #}
-                                    <div class="bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition duration-300 gallery-item-in-slide">
-                                        <a href="{% url 'galleries:client_gallery_detail' gallery.pk %}">
-                                            {% if gallery.cover_image and gallery.cover_image.image_file_thumb %}
-                                                <img src="{{ gallery.cover_image.image_file_thumb.url }}" alt="Capa da Galeria: {{ gallery.name }}" class="w-full h-48 object-cover">
-                                            {% else %}
-                                                <img src="https://placehold.co/600x400/cccccc/333333?text=Sem+Capa" alt="Sem Imagem de Capa" class="w-full h-48 object-cover">
-                                            {% endif %}
-                                            <div class="p-4">
-                                                <h3 class="text-lg font-semibold text-gray-800 mb-1">{{ gallery.name }}</h3>
-                                                <p class="text-sm text-gray-600">{{ gallery.event_date|date:"d/m/Y" }}</p>
-                                            </div>
-                                        </a>
+                    {# Layout para telas pequenas: Rolagem horizontal #}
+                    <div class="md:hidden horizontal-scroll-container">
+                        {% for gallery in galleries %}
+                            <div class="bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition duration-300 horizontal-scroll-item">
+                                <a href="{% url 'galleries:client_gallery_detail' gallery.pk %}">
+                                    {% if gallery.cover_image and gallery.cover_image.image_file_thumb %}
+                                        <img src="{{ gallery.cover_image.image_file_thumb.url }}" alt="Capa da Galeria: {{ gallery.name }}" class="w-full h-48 object-cover">
+                                    {% else %}
+                                        <img src="https://placehold.co/600x400/cccccc/333333?text=Sem+Capa" alt="Sem Imagem de Capa" class="w-full h-48 object-cover">
+                                    {% endif %}
+                                    <div class="p-4">
+                                        <h3 class="text-lg font-semibold text-gray-800 mb-1">{{ gallery.name }}</h3>
+                                        <p class="text-sm text-gray-600">{{ gallery.event_date|date:"d/m/Y" }}</p>
                                     </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                        <!-- Paginação e Navegação para ESTE GRUPO -->
-                        <div class="swiper-pagination group-pagination-{{ forloop.counter }}"></div>
-                        <div class="swiper-button-next group-next-{{ forloop.counter }}"></div>
-                        <div class="swiper-button-prev group-prev-{{ forloop.counter }}"></div>
+                                </a>
+                            </div>
+                        {% endfor %}
                     </div>
 
-                    {# Layout para telas médias e grandes: Grade responsiva (igual ao público) #}
-                    <div class="hidden md:block grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                    {# Layout para telas médias e grandes: Flexbox responsivo (AGORA IGUAL AO PÚBLICO) #}
+                    <div class="hidden md:flex flex-wrap gap-4 mt-4"> {# Alterado para flexbox #}
                         {% for gallery in galleries %}
-                            <div class="bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition duration-300">
+                            <div class="bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition duration-300 gallery-item"> {# Adicionada classe gallery-item #}
                                 <a href="{% url 'galleries:client_gallery_detail' gallery.pk %}">
                                     {% if gallery.cover_image and gallery.cover_image.image_file_thumb %}
                                         <img src="{{ gallery.cover_image.image_file_thumb.url }}" alt="Capa da Galeria: {{ gallery.name }}" class="w-full h-48 object-cover">
@@ -271,35 +264,4 @@
 
     </div> {# Fim do grid principal #}
 </div>
-
-<!-- Swiper JS -->
-<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Inicializa UM carrossel Swiper para CADA grupo de galerias privadas
-        // Isso só acontecerá em telas pequenas (menores que 768px)
-        if (window.innerWidth < 768) {
-            // Seleciona todos os contêineres Swiper que têm a classe 'group-swiper-'
-            document.querySelectorAll('.swiper-container[class*="group-swiper-"]').forEach(function(swiperElement) {
-                // Extrai o número único do ID do Swiper (ex: 'group-swiper-1', 'group-swiper-2')
-                const swiperClass = Array.from(swiperElement.classList).find(cls => cls.startsWith('group-swiper-'));
-                const swiperIndex = swiperClass.split('-').pop(); // Pega o número (ex: '1', '2')
-
-                new Swiper(`.${swiperClass}`, {
-                    slidesPerView: 'auto', // Exibe quantos slides couberem, mas permite rolagem
-                    spaceBetween: 10,
-                    pagination: {
-                        el: `.group-pagination-${swiperIndex}`, // Paginação específica para este carrossel
-                        clickable: true,
-                    },
-                    navigation: {
-                        nextEl: `.group-next-${swiperIndex}`, // Botão 'próximo' específico
-                        prevEl: `.group-prev-${swiperIndex}`, // Botão 'anterior' específico
-                    },
-                    // Não precisamos de breakpoints aqui, pois este Swiper só é inicializado para telas pequenas
-                });
-            });
-        }
-    });
-</script>
 {% endblock %}
