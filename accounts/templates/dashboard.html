@@ -13,12 +13,18 @@
             padding-bottom: 20px; /* Espaço para paginação */
             margin-bottom: 20px; /* Espaço entre carrosséis de grupos diferentes */
         }
-        /* Garantir que cada slide ocupe a largura total do seu container */
+        /* Força o swiper-wrapper a ser um flexbox horizontal */
+        .swiper-wrapper {
+            display: flex !important;
+            flex-direction: row !important;
+        }
+        /* Garante que cada slide ocupe a largura total do seu container e não encolha */
         .swiper-slide {
-            display: flex;
+            display: flex; /* Mantém flex para centralizar o conteúdo da galeria */
             justify-content: center;
             align-items: center;
-            /* REMOVIDO: flex-direction: column; - Esta era a causa do problema */
+            flex-shrink: 0 !important; /* Impede que o slide encolha */
+            width: 100% !important; /* Garante que o slide ocupe 100% da largura do contêiner visível */
             padding: 10px; /* Espaçamento interno do slide */
         }
         .swiper-pagination-bullet-active {
