@@ -5,24 +5,6 @@
 
 {% block extra_head %}
     <style>
-        /* Estilos para o layout de grade das galerias (para telas médias/grandes) */
-        .gallery-grid-desktop {
-            display: grid;
-            grid-template-columns: repeat(1, minmax(0, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-        @media (min-width: 640px) { /* Em sm e maiores, 2 colunas */
-            .gallery-grid-desktop {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-        }
-        @media (min-width: 1024px) { /* Em lg e maiores, 3 colunas */
-            .gallery-grid-desktop {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-            }
-        }
-
         /* Estilos para rolagem horizontal em telas pequenas (mobile) */
         .horizontal-scroll-container {
             display: flex;
@@ -168,8 +150,8 @@
                         {% endfor %}
                     </div>
 
-                    {# Layout para telas médias e grandes: Grade responsiva #}
-                    <div class="hidden md:block gallery-grid-desktop">
+                    {# Layout para telas médias e grandes: Grade responsiva (igual ao público) #}
+                    <div class="hidden md:block grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
                         {% for gallery in galleries %}
                             <div class="bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition duration-300">
                                 <a href="{% url 'galleries:client_gallery_detail' gallery.pk %}">
