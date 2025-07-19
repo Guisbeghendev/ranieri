@@ -12,20 +12,23 @@
             width: 100%;
             padding-bottom: 20px; /* Espaço para paginação */
             margin-bottom: 20px; /* Espaço entre carrosséis de grupos diferentes */
+            overflow: hidden; /* Garante que o conteúdo fora do slide não seja visível */
         }
         /* Força o swiper-wrapper a ser um flexbox horizontal */
         .swiper-wrapper {
             display: flex !important;
             flex-direction: row !important;
+            box-sizing: content-box !important; /* Garante que o padding não afete a largura total */
         }
         /* Garante que cada slide ocupe a largura total do seu container e não encolha */
         .swiper-slide {
-            display: flex; /* Mantém flex para centralizar o conteúdo da galeria */
-            justify-content: center;
-            align-items: center;
+            display: flex !important; /* Força flex para centralizar o conteúdo da galeria */
+            justify-content: center !important;
+            align-items: center !important;
             flex-shrink: 0 !important; /* Impede que o slide encolha */
             width: 100% !important; /* Garante que o slide ocupe 100% da largura do contêiner visível */
-            padding: 10px; /* Espaçamento interno do slide */
+            /* REMOVIDO: padding: 10px !important; - MOVIMENTADO PARA .gallery-item-in-slide */
+            box-sizing: border-box !important; /* Inclui padding e border no width */
         }
         .swiper-pagination-bullet-active {
             background-color: #8B5CF6 !important; /* Cor roxa1 para o bullet ativo */
@@ -47,6 +50,7 @@
             width: 100%; /* Ocupa a largura total do swiper-slide */
             max-width: 300px; /* Limita o tamanho máximo da galeria individual */
             box-sizing: border-box; /* Inclui padding e border no width */
+            padding: 10px; /* ADICIONADO AQUI: O padding agora está dentro do item da galeria */
         }
 
         /* Estilos para o layout de grade em telas médias e grandes (que não usam carrossel) */
