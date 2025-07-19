@@ -4,103 +4,43 @@
 {% block title %}Meu painel - {{ user.username }} - {{ project_name }}{% endblock %}
 
 {% block extra_head %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <style>
-        /* Estilos para rolagem horizontal em telas pequenas (mobile) */
-        .horizontal-scroll-container {
-            display: flex;
-            overflow-x: auto; /* Permite rolagem horizontal */
-            -webkit-overflow-scrolling: touch; /* Rolagem suave em iOS */
-            padding-bottom: 1rem; /* Espaço para a barra de rolagem se visível */
-            gap: 1rem; /* Espaçamento entre as galerias */
+        .swiper {
+            padding-bottom: 1rem;
         }
-        /* Esconde a barra de rolagem padrão, mas mantém a funcionalidade */
-        .horizontal-scroll-container::-webkit-scrollbar {
-            display: none; /* Chrome, Safari, Opera */
-        }
-        .horizontal-scroll-container {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-        }
-
-        /* Garante que os itens dentro do contêiner de rolagem não encolham e tenham largura fixa */
-        .horizontal-scroll-item {
-            flex-shrink: 0; /* Impede que o item encolha */
-            width: 250px; /* Largura fixa para cada item da galeria no scroll */
-            /* Você pode ajustar esta largura conforme a necessidade do design mobile */
-        }
-
-        /* Estilos para o layout de grade em telas médias e grandes (que não usam rolagem horizontal) */
-        /* Aplicamos flexbox no contêiner e larguras percentuais nos itens */
-        .desktop-gallery-flex-grid {
-            display: flex;
-            flex-wrap: wrap; /* Permite que os itens quebrem para a próxima linha */
-            gap: 1rem; /* Espaçamento entre os itens */
-            margin-top: 1rem;
-        }
-        .desktop-gallery-flex-grid .gallery-item {
-            flex-basis: calc(100% - 1rem); /* 1 coluna em telas pequenas (se visível) */
-            max-width: calc(100% - 1rem);
-        }
-        @media (min-width: 640px) { /* Em sm e maiores, 2 colunas */
-            .desktop-gallery-flex-grid .gallery-item {
-                flex-basis: calc(50% - 0.5rem); /* 2 colunas (50% - metade do gap) */
-                max-width: calc(50% - 0.5rem);
-            }
-        }
-        @media (min-width: 1024px) { /* Em lg e maiores, 3 colunas */
-            .desktop-gallery-flex-grid .gallery-item {
-                flex-basis: calc(33.333% - 0.666rem); /* 3 colunas (1/3 - 2/3 do gap) */
-                max-width: calc(33.333% - 0.666rem);
-            }
+        .swiper-slide {
+            width: auto !important;
         }
     </style>
 {% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
-    <!-- Boas-vindas: Laranja1 - FONTE AJUSTADA PARA RESPONSIVIDADE -->
     <h1 class="text-3xl md:text-4xl font-bold text-laranja1 mb-8">Bem-vindo(a), {{ user_name }}!</h1>
 
-    <!-- col-span define quantas colunas cada card ira ocupar-->
-
-    <!-- Início da Definição do Grid Principal: Define 1 coluna em mobile, 2 em md, e 3 em lg -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <!-- Início do Card: Acessos Rápidos -->
-        <!-- Este card ocupa 1 coluna por padrão em todas as telas -->
-        <!-- Fundo do card: Prata1 -->
-        {% if is_staff_user or is_photographer_user %} {# AGORA VERIFICA is_staff_user ou is_photographer_user #}
+        {% if is_staff_user or is_photographer_user %}
             <div class="bg-prata1 p-6 rounded-lg shadow-md flex flex-col justify-between">
-                <!-- Título do card: Roxo1 -->
                 <h2 class="text-2xl font-semibold text-roxo1 mb-4">Acessos Rápidos</h2>
                 <div class="flex flex-col sm:flex-row flex-wrap gap-4 mt-auto">
-                    {% if is_staff_user %} {# AGORA USA is_staff_user #}
-                        <!-- Botão 1: Fundo Roxo2, Letra Branco1 -->
+                    {% if is_staff_user %}
                         <a href="{% url 'admin:index' %}" class="px-6 py-3 bg-roxo2 text-branco1 rounded-lg shadow-md hover:bg-roxo1 transition duration-300 w-full sm:w-auto text-center">
                             Painel Admin
                         </a>
                     {% endif %}
-                    {% if is_photographer_user %} {# AGORA USA is_photographer_user #}
-                        <!-- Botão 2: Fundo Laranja3, Letra Preto1 -->
+                    {% if is_photographer_user %}
                         <a href="{% url 'photographer:gallery_list' %}" class="px-6 py-3 bg-laranja3 text-preto1 rounded-lg shadow-md hover:bg-laranja2 transition duration-300 w-full sm:w-auto text-center">
                             Painel do Fotógrafo
                         </a>
                     {% endif %}
-                    <!-- Adicione outros botões de atalho aqui no futuro -->
                 </div>
             </div>
         {% endif %}
-        <!-- Fim do Card: Acessos Rápidos -->
 
-        <!-- Início do Card: Resumo do Perfil - AGORA COM 3 COLUNAS -->
-        <!-- Este card ocupa 1 coluna em telas pequenas, 2 colunas em telas médias, e 3 colunas em telas grandes -->
-        <!-- Fundo do card: Prata1 -->
-        <div class="bg-prata1 p-6 rounded-lg shadow-md flex flex-col md:col-span-2 lg:col-span-3 justify-between"> {# Alterado para lg:col-span-3 #}
-            <!-- Título do card: Roxo1 -->
+        <div class="bg-prata1 p-6 rounded-lg shadow-md flex flex-col md:col-span-2 lg:col-span-3 justify-between">
             <h2 class="text-2xl font-semibold text-roxo1 mb-4">Seu Perfil</h2>
-
-            {# NOVO: Grid interno para as 3 colunas do perfil #}
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-preto1 mt-auto">
-                {# Coluna 1: Nome e Email #}
                 <div class="flex flex-col items-center sm:items-start text-center sm:text-left">
                     <p class="text-lg font-semibold mb-1">{{ user.get_full_name|default:user.username }}</p>
                     <p class="text-sm text-gray-600">{{ user.email|default:"E-mail não informado" }}</p>
@@ -110,30 +50,22 @@
                         </a>
                     </div>
                 </div>
-
-                {# Coluna 2: Avatar #}
-                <div class="flex justify-center items-start"> {# Ajustado para centralizar o avatar horizontalmente #}
+                <div class="flex justify-center items-start">
                     {% if user.profile.profile_picture %}
-                        {# Se tem foto, usa a imagem com o "anel" #}
-                        <img class="w-24 h-24 p-1 rounded-full ring-2 ring-gray-300 dark:ring-gray-500 object-cover"
-                             src="{{ user.profile.profile_picture.url }}"
-                             alt="Foto de Perfil">
+                        <img class="w-24 h-24 p-1 rounded-full ring-2 ring-gray-300 dark:ring-gray-500 object-cover" src="{{ user.profile.profile_picture.url }}" alt="Foto de Perfil">
                     {% else %}
-                        {# Se não tem foto, usa as iniciais com o "anel" e padding #}
                         <div class="relative inline-flex items-center justify-center w-24 h-24 overflow-hidden bg-gray-100 rounded-full dark:bg-gray-600 ring-2 ring-gray-300 dark:ring-gray-500 p-1">
-                            <span class="font-medium text-gray-600 dark:text-gray-300 text-4xl"> {# Ajustado o tamanho do texto para o avatar #}
+                            <span class="font-medium text-gray-600 dark:text-gray-300 text-4xl">
                                 {{ user.username|first|upper }}
                             </span>
                         </div>
                     {% endif %}
                 </div>
-
-                {# NOVA Coluna 3: Grupos #}
                 <div class="flex flex-col items-center sm:items-start text-center sm:text-left">
-                    <h3 class="text-xl font-semibold text-roxo1 mb-2">Meus Grupos</h3> {# Título alterado para "Meus Grupos" #}
-                    {% if user_roles %} {# AGORA USANDO user_roles #}
+                    <h3 class="text-xl font-semibold text-roxo1 mb-2">Meus Grupos</h3>
+                    {% if user_roles %}
                         <ul class="list-disc list-inside text-preto1">
-                            {% for group in user_roles %} {# AGORA USANDO user_roles #}
+                            {% for group in user_roles %}
                                 <li class="mb-1">{{ group.name }}</li>
                             {% endfor %}
                         </ul>
@@ -143,23 +75,34 @@
                 </div>
             </div>
         </div>
-        <!-- Fim do Card: Resumo do Perfil -->
 
-        <!-- Início do Card: Suas Últimas Galerias Privadas (Antigo "Últimas Galerias") -->
-        <!-- Este card ocupa 1 coluna em telas pequenas e médias, e 3 colunas em telas grandes -->
-        <!-- Fundo do card: Prata1 -->
         <div class="bg-prata1 p-6 rounded-lg shadow-md flex flex-col lg:col-span-3 justify-between">
-            <!-- Título do card: Roxo1 -->
             <h2 class="text-2xl font-semibold text-roxo1 mb-4">Suas Últimas Galerias Privadas</h2>
-            <!-- Conteúdo dinâmico das galerias privadas -->
             {% if latest_galleries_by_group %}
                 {% for group_name, galleries in latest_galleries_by_group.items %}
                     <h3 class="text-xl font-semibold text-roxo1 mt-4 mb-2">{{ group_name }}</h3>
-
-                    {# Layout para telas pequenas: Rolagem horizontal #}
-                    <div class="md:hidden horizontal-scroll-container">
+                    <div class="md:hidden swiper mySwiper">
+                        <div class="swiper-wrapper">
+                            {% for gallery in galleries %}
+                                <div class="swiper-slide bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition duration-300 w-[250px]">
+                                    <a href="{% url 'galleries:client_gallery_detail' gallery.pk %}">
+                                        {% if gallery.cover_image and gallery.cover_image.image_file_thumb %}
+                                            <img src="{{ gallery.cover_image.image_file_thumb.url }}" alt="Capa da Galeria: {{ gallery.name }}" class="w-full h-48 object-cover">
+                                        {% else %}
+                                            <img src="https://placehold.co/600x400/cccccc/333333?text=Sem+Capa" alt="Sem Imagem de Capa" class="w-full h-48 object-cover">
+                                        {% endif %}
+                                        <div class="p-4">
+                                            <h3 class="text-lg font-semibold text-gray-800 mb-1">{{ gallery.name }}</h3>
+                                            <p class="text-sm text-gray-600">{{ gallery.event_date|date:"d/m/Y" }}</p>
+                                        </div>
+                                    </a>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="hidden md:flex flex-wrap gap-4 mt-4">
                         {% for gallery in galleries %}
-                            <div class="bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition duration-300 horizontal-scroll-item">
+                            <div class="bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition duration-300 gallery-item w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.666rem)]">
                                 <a href="{% url 'galleries:client_gallery_detail' gallery.pk %}">
                                     {% if gallery.cover_image and gallery.cover_image.image_file_thumb %}
                                         <img src="{{ gallery.cover_image.image_file_thumb.url }}" alt="Capa da Galeria: {{ gallery.name }}" class="w-full h-48 object-cover">
@@ -174,29 +117,8 @@
                             </div>
                         {% endfor %}
                     </div>
-
-                    {# Layout para telas médias e grandes: Flexbox responsivo (AGORA IGUAL AO PÚBLICO) #}
-                    <div class="hidden md:flex flex-wrap gap-4 mt-4"> {# Alterado para flexbox #}
-                        {% for gallery in galleries %}
-                            <div class="bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition duration-300 gallery-item"> {# Adicionada classe gallery-item #}
-                                <a href="{% url 'galleries:client_gallery_detail' gallery.pk %}">
-                                    {% if gallery.cover_image and gallery.cover_image.image_file_thumb %}
-                                        <img src="{{ gallery.cover_image.image_file_thumb.url }}" alt="Capa da Galeria: {{ gallery.name }}" class="w-full h-48 object-cover">
-                                    {% else %}
-                                        <img src="https://placehold.co/600x400/cccccc/333333?text=Sem+Capa" alt="Sem Imagem de Capa" class="w-full h-48 object-cover">
-                                    {% endif %}
-                                    <div class="p-4">
-                                        <h3 class="text-lg font-semibold text-gray-800 mb-1">{{ gallery.name }}</h3>
-                                        <p class="text-sm text-gray-600">{{ gallery.event_date|date:"d/m/Y" }}</p>
-                                    </div>
-                                </a>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% endfor %} {# Fim do loop for group_name, galleries #}
-
+                {% endfor %}
                 <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mt-6">
-                    <!-- Botão: Fundo Roxo2, Letra Branco1 -->
                     <a href="{% url 'galleries:client_group_list' %}" class="px-6 py-3 bg-roxo2 text-branco1 rounded-lg shadow-md hover:bg-roxo1 transition duration-300 w-full sm:w-auto text-center">
                         Ver Mais Galerias Privadas
                     </a>
@@ -207,61 +129,28 @@
                     <p>Entre em contato com o fotógrafo para ter acesso às suas fotos!</p>
                 </div>
                 <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
-                    <!-- Botão: Fundo Roxo2, Letra Branco1 -->
                     <a href="{% url 'galleries:client_group_list' %}" class="px-6 py-3 bg-roxo2 text-branco1 rounded-lg shadow-md hover:bg-roxo1 transition duration-300 w-full sm:w-auto text-center">
                         Ver Meus Grupos de Galerias
                     </a>
                 </div>
             {% endif %}
         </div>
-        <!-- Fim do Card: Suas Últimas Galerias Privadas -->
-
-        <!-- NOVO CARD: Últimas Galerias Públicas -->
-        <!-- Este card ocupa 1 coluna em telas pequenas e médias, e 3 colunas em telas grandes -->
-        <!-- Fundo do card: Prata1 -->
-        <div class="bg-prata1 p-6 rounded-lg shadow-md flex flex-col lg:col-span-3 justify-between">
-            <!-- Título do card: Roxo1 -->
-            <h2 class="text-2xl font-semibold text-roxo1 mb-4">Últimas Galerias Públicas</h2>
-
-            {% if latest_public_galleries %}
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-                    {% for gallery in latest_public_galleries %}
-                        <div class="bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition duration-300">
-                            <a href="{% url 'public_galleries:public_gallery_detail' gallery.pk %}">
-                                {% if gallery.cover_image and gallery.cover_image.image_file_thumb %}
-                                    <img src="{{ gallery.cover_image.image_file_thumb.url }}" alt="Capa da Galeria: {{ gallery.name }}" class="w-full h-48 object-cover">
-                                {% else %}
-                                    <img src="https://placehold.co/600x400/cccccc/333333?text=Sem+Capa" alt="Sem Imagem de Capa" class="w-full h-48 object-cover">
-                                {% endif %}
-                                <div class="p-4">
-                                    <h3 class="text-lg font-semibold text-gray-800 mb-1">{{ gallery.name }}</h3>
-                                    <p class="text-sm text-gray-600">{{ gallery.event_date|date:"d/m/Y" }}</p>
-                                </div>
-                            </a>
-                        </div>
-                    {% endfor %}
-                </div>
-                <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mt-6">
-                    <!-- Botão: Fundo Roxo2, Letra Branco1 -->
-                    <a href="{% url 'public_galleries:public_gallery_list' %}" class="px-6 py-3 bg-roxo2 text-branco1 rounded-lg shadow-md hover:bg-roxo1 transition duration-300 w-full sm:w-auto text-center">
-                        Ver Mais Galerias Públicas
-                    </a>
-                </div>
-            {% else %}
-                <div class="text-preto1 mt-auto mb-6">
-                    <p class="mb-2">Nenhuma galeria pública disponível no momento.</p>
-                    <p>Fique atento para novos trabalhos dos fotógrafos!</p>
-                </div>
-                <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
-                    <!-- Botão: Fundo Roxo2, Letra Branco1 -->
-                    <a href="{% url 'public_galleries:public_gallery_list' %}" class="px-6 py-3 bg-roxo2 text-branco1 rounded-lg shadow-md hover:bg-roxo1 transition duration-300 w-full sm:w-auto text-center">
-                        Ver Todas as Galerias Públicas
-                    </a>
-                </div>
-            {% endif %}
-        </div>
-        <!-- Fim do Card: Últimas Galerias Públicas -->
-
-    </div> {# Fim do grid principal #}
+    </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script>
+    const swipers = document.querySelectorAll('.mySwiper');
+    swipers.forEach((swiperEl) => {
+        new Swiper(swiperEl, {
+            slidesPerView: 1.2,
+            spaceBetween: 16,
+            grabCursor: true,
+            loop: false,
+            breakpoints: {
+                480: { slidesPerView: 1.5 },
+                640: { slidesPerView: 2 },
+            }
+        });
+    });
+</script>
 {% endblock %}
