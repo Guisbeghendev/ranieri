@@ -28,6 +28,7 @@
             width: 250px; /* Largura fixa para cada item da galeria no scroll */
             /* Você pode ajustar esta largura conforme a necessidade do design mobile */
         }
+        /* REMOVIDO: .gallery-grid-desktop CSS rule, as Tailwind classes are used directly in HTML */
     </style>
 {% endblock %}
 
@@ -150,7 +151,7 @@
                         {% endfor %}
                     </div>
 
-                    {# Layout para telas médias e grandes: Grade responsiva (igual ao público) #}
+                    {# Layout para telas médias e grandes: Grade responsiva (AGORA IGUAL AO PÚBLICO) #}
                     <div class="hidden md:block grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
                         {% for gallery in galleries %}
                             <div class="bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition duration-300">
