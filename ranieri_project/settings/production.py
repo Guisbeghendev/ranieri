@@ -2,7 +2,7 @@ from .base import * # Importa todas as configurações de base.py
 from decouple import config
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 # Hosts permitidos em produção
 ALLOWED_HOSTS = ['escolajoseranieri.com.br', 'www.escolajoseranieri.com.br', '77.37.68.104']
