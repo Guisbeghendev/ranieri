@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -9,10 +10,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-s+1&_sn#vdu#u05^ldd4p21l3q-w!dx9@5u@a4s_)371q(=#^b'
+SECRET_KEY = config('SECRET_KEY') # Lendo do ambiente para produção
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False # MUITO IMPORTANTE: DEBUG deve ser False em produção
 
 ALLOWED_HOSTS = ['escolajoseranieri.com.br', 'www.escolajoseranieri.com.br', '77.37.68.104']
 
@@ -99,6 +100,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'core.context_processors.project_name_processor',
+                'core.context_processors.visit_counter_processor', # NOVO: Contador de visitas
             ],
         },
     },
@@ -113,11 +115,11 @@ WSGI_APPLICATION = 'ranieri_project.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'ranieri_db', # Nome do seu banco de dados MySQL
-        'USER': 'bdranieri', # Seu usuário MySQL
-        'PASSWORD': 'Gsp@ranieri2025', # Sua senha MySQL
-        'HOST': 'localhost', # Ou o IP do seu servidor MySQL ou 127.0.0.1
-        'PORT': '3306', # Porta padrão do MySQL
+        'NAME': config('DB_NAME'), # Lendo do ambiente
+        'USER': config('DB_USER'), # Lendo do ambiente
+        'PASSWORD': config('DB_PASSWORD'), # Lendo do ambiente
+        'HOST': config('DB_HOST', default='localhost'), # Lendo do ambiente
+        'PORT': config('DB_PORT', default='3306'), # Lendo do ambiente
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
         }
@@ -157,7 +159,7 @@ USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
+# https://docs.djangoproject.com/en/5.2/topics/static-files/
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [
@@ -188,11 +190,20 @@ ANONYMOUS_USER_ID = -1  # ou qualquer ID que não conflite com IDs de usuários 
 
 
 # Configurações do Celery
-CELERY_BROKER_URL = 'redis://localhost:6379/0'  # URL do seu servidor Redis (porta padrão 6379, DB 0)
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0' # Opcional: para armazenar resultados de tarefas
+CELERY_BROKER_URL = config('CELERY_BROKER_URL') # Lendo do ambiente
+CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND') # Lendo do ambiente
 CELERY_ACCEPT_CONTENT = ['json'] # Conteúdo aceito para tarefas
 CELERY_TASK_SERIALIZER = 'json' # Serializador para tarefas
 CELERY_RESULT_SERIALIZER = 'json' # Serializador para resultados
 CELERY_TIMEZONE = 'America/Sao_Paulo' # Use o mesmo fuso horário do Django
 CELERY_TASK_TRACK_STARTED = True # Rastreia o estado 'STARTED' da tarefa
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True # Tenta reconectar ao broker na inicialização
+
+# Configurações de segurança adicionais para produção (já estavam aqui)
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+SECURE_SSL_REDIRECT = True
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+X_FRAME_OPTIONS = 'DENY'

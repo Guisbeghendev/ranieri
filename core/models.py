@@ -269,3 +269,35 @@ class GaleriaLike(models.Model):
     def __str__(self):
         return f'{self.user.username} curtiu {self.galeria.name}'
 
+# --- NOVO MODELO: VisitCounter (para o contador de visitas) ---
+class VisitCounter(models.Model):
+    # O campo `count` armazenará o número total de visitas.
+    # Usamos `default=0` para garantir que ele comece em zero.
+    count = models.PositiveIntegerField(default=0, verbose_name="Contador de Visitas")
+
+    class Meta:
+        verbose_name = 'Contador de Visitas'
+        verbose_name_plural = 'Contadores de Visitas'
+        # Adiciona uma restrição para garantir que só haja uma única linha na tabela.
+        # Isso é crucial para um contador global.
+        constraints = [
+            models.UniqueConstraint(fields=['id'], name='unique_visit_counter')
+        ]
+
+    def __str__(self):
+        return f"Total de Visitas: {self.count}"
+
+    # Método para incrementar o contador de forma segura
+    @classmethod
+    def increment(cls):
+        # Usa select_for_update para bloquear a linha durante a atualização,
+        # prevenindo condições de corrida em ambientes multi-threaded/multi-process.
+        with transaction.atomic():
+            counter, created = cls.objects.select_for_update().get_or_create(
+                id=1,  # Usamos um ID fixo para garantir que sempre atualizamos a mesma linha
+                defaults={'count': 0}
+            )
+            counter.count += 1
+            counter.save()
+            return counter.count
+
