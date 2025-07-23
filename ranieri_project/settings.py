@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -10,7 +9,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY') # Lendo do ambiente para produção
+# A SECRET_KEY agora está diretamente aqui, como funcionava antes.
+SECRET_KEY = 'j=-3yvtnas$+9d&(&kdpw3(-e34ddpg!0fq=_t3e9kof1=ymj&' # SUBSTITUA POR UMA CHAVE FORTE E ÚNICA!
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False # MUITO IMPORTANTE: DEBUG deve ser False em produção
@@ -109,20 +109,12 @@ TEMPLATES = [
 WSGI_APPLICATION = 'ranieri_project.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
+# Database (TEMPORÁRIO para carregamento parcial - usa SQLite)
+# Quando o MySQL estiver pronto, você voltará para a configuração anterior.
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('DB_NAME'), # Lendo do ambiente
-        'USER': os.environ.get('DB_USER'), # Lendo do ambiente
-        'PASSWORD': os.environ.get('DB_PASSWORD'), # Lendo do ambiente
-        'HOST': os.environ.get('DB_HOST', default='localhost'), # Lendo do ambiente
-        'PORT': os.environ.get('DB_PORT', default='3306'), # Lendo do ambiente
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        }
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
@@ -189,15 +181,15 @@ ANONYMOUS_USER_NAME = 'AnonymousUser'
 ANONYMOUS_USER_ID = -1  # ou qualquer ID que não conflite com IDs de usuários reais
 
 
-# Configurações do Celery
-CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL') # Lendo do ambiente
-CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND') # Lendo do ambiente
-CELERY_ACCEPT_CONTENT = ['json'] # Conteúdo aceito para tarefas
-CELERY_TASK_SERIALIZER = 'json' # Serializador para tarefas
-CELERY_RESULT_SERIALIZER = 'json' # Serializador para resultados
-CELERY_TIMEZONE = 'America/Sao_Paulo' # Use o mesmo fuso horário do Django
-CELERY_TASK_TRACK_STARTED = True # Rastreia o estado 'STARTED' da tarefa
-CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True # Tenta reconectar ao broker na inicialização
+# Configurações do Celery (AGORA COMENTADAS, POIS NÃO ESTÃO EM USO)
+# CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL')
+# CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND')
+#CELERY_ACCEPT_CONTENT = ['json'] # Conteúdo aceito para tarefas
+#CELERY_TASK_SERIALIZER = 'json' # Serializador para tarefas
+#CELERY_RESULT_SERIALIZER = 'json' # Serializador para resultados
+#CELERY_TIMEZONE = 'America/Sao_Paulo' # Use o mesmo fuso horário do Django
+#CELERY_TASK_TRACK_STARTED = True # Rastreia o estado 'STARTED' da tarefa
+#CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True # Tenta reconectar ao broker na inicialização
 
 # Configurações de segurança adicionais para produção (já estavam aqui)
 CSRF_COOKIE_SECURE = True
