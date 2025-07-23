@@ -184,12 +184,12 @@ ANONYMOUS_USER_ID = -1  # ou qualquer ID que não conflite com IDs de usuários 
 # Configurações do Celery (AGORA COMENTADAS, POIS NÃO ESTÃO EM USO)
 # CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL')
 # CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND')
-#CELERY_ACCEPT_CONTENT = ['json'] # Conteúdo aceito para tarefas
-#CELERY_TASK_SERIALIZER = 'json' # Serializador para tarefas
-#CELERY_RESULT_SERIALIZER = 'json' # Serializador para resultados
-#CELERY_TIMEZONE = 'America/Sao_Paulo' # Use o mesmo fuso horário do Django
-#CELERY_TASK_TRACK_STARTED = True # Rastreia o estado 'STARTED' da tarefa
-#CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True # Tenta reconectar ao broker na inicialização
+CELERY_ACCEPT_CONTENT = ['json'] # Conteúdo aceito para tarefas
+CELERY_TASK_SERIALIZER = 'json' # Serializador para tarefas
+CELERY_RESULT_SERIALIZER = 'json' # Serializador para resultados
+CELERY_TIMEZONE = 'America/Sao_Paulo' # Use o mesmo fuso horário do Django
+CELERY_TASK_TRACK_STARTED = True # Rastreia o estado 'STARTED' da tarefa
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True # Tenta reconectar ao broker na inicialização
 
 # Configurações de segurança adicionais para produção (já estavam aqui)
 CSRF_COOKIE_SECURE = True
@@ -199,3 +199,39 @@ SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 X_FRAME_OPTIONS = 'DENY'
+
+# --- INÍCIO DA CONFIGURAÇÃO DE LOGGING PARA DEBUG ---
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': '/var/www/escolajoseranieri.com.br/html/django_debug.log', # Caminho para o novo log de depuração
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file', 'console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'ranieri_project': { # Ajuste para o nome do seu projeto principal
+            'handlers': ['file', 'console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'core': { # Exemplo, adicione seus apps aqui
+            'handlers': ['file', 'console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        # Adicione outros loggers para seus apps conforme necessário
+    },
+}
+# --- FIM DA CONFIGURAÇÃO DE LOGGING PARA DEBUG ---
