@@ -234,4 +234,4 @@ LOGGING = {
         # Adicione outros loggers para seus apps conforme necessário
     },
 }
-# --- FIM DA CONFIGURAÇÃO DE LOGGING PARA DEBUG ---
+# --- FIM DA CONFIGURAÇÃO DE LOGGING PARA DEBUG
