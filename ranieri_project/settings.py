@@ -57,7 +57,7 @@ AUTHENTICATION_BACKENDS = (
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
+    'django.contrib.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -109,12 +109,18 @@ TEMPLATES = [
 WSGI_APPLICATION = 'ranieri_project.wsgi.application'
 
 
-# Database (TEMPORÁRIO para carregamento parcial - usa SQLite)
-# Quando o MySQL estiver pronto, você voltará para a configuração anterior.
+# Database (AGORA COM MYSQL NOVAMENTE)
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'ranieri_db', # Nome do seu banco de dados MySQL
+        'USER': 'bdranieri', # Seu usuário MySQL
+        'PASSWORD': 'Gsp@ranieri2025', # Sua senha MySQL
+        'HOST': 'localhost', # Geralmente 'localhost' se o DB está no mesmo servidor, ou o IP/hostname do DB
+        'PORT': '3306', # Porta padrão do MySQL
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        }
     }
 }
 
@@ -234,4 +240,4 @@ LOGGING = {
         # Adicione outros loggers para seus apps conforme necessário
     },
 }
-# --- FIM DA CONFIGURAÇÃO DE LOGGING PARA DEBUG
+# --- FIM DA CONFIGURAÇÃO DE LOGGING PARA DEBUG ---
