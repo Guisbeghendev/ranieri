@@ -13,28 +13,18 @@ from photographer.tasks import process_image_task
 
 # Função para obter as opções de marca d'água dinamicamente
 def get_watermark_choices():
-    # Define o caminho completo para o diretório de marcas d'água
     watermark_dir = os.path.join(settings.MEDIA_ROOT, 'watermarks')
-
-    # Opção padrão para "Sem Marca D'água"
     choices = [('', 'Sem Marca D\'água')]
-
-    # Cria o diretório se ele não existir
     if not os.path.exists(watermark_dir):
         os.makedirs(watermark_dir)
-
     for filename in os.listdir(watermark_dir):
-        # Verifica se é um arquivo de imagem
         if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
-            # Adiciona o nome do arquivo como opção (valor, label)
-            # O label é formatado para ser mais legível
             choices.append((filename, filename.replace('_', ' ').replace('-', ' ').capitalize()))
     return choices
 
 
 # --- Modelo User (Personalizado e Limpo) ---
 class User(AbstractUser):
-    # Sobrescrita de campos para evitar o related_name clash com AbstractUser
     groups = models.ManyToManyField(
         'auth.Group',
         verbose_name=('Grupos'),
@@ -55,7 +45,6 @@ class User(AbstractUser):
         related_query_name="core_user_permission",
     )
 
-    # --- Campo para os AudienceGroups do usuário ---
     audience_groups = models.ManyToManyField(
         'core.AudienceGroup',
         verbose_name="Grupos de Audiência",
@@ -64,8 +53,6 @@ class User(AbstractUser):
         help_text='Os grupos de audiência aos quais este usuário pertence para acesso a conteúdo.'
     )
 
-    # CORREÇÃO: is_photographer agora é um campo BooleanField gravável.
-    # Isso permite que ele seja definido por um administrador ou pelo sinal.
     is_photographer = models.BooleanField(default=False, verbose_name="É Fotógrafo?")
 
     class Meta(AbstractUser.Meta):
@@ -75,11 +62,6 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
-
-    # O método @property is_photographer foi removido, pois agora é um campo gravável.
-    # A lógica de ser superusuário ou membro do grupo 'fotografo' agora será gerenciada
-    # pelo sinal 'update_user_flags_on_group_change' no core/signals.py,
-    # que irá definir este campo BooleanField.
 
 
 # --- Modelo AudienceGroup ---
@@ -142,7 +124,6 @@ class Galeria(models.Model):
     description = models.TextField(blank=True, null=True, verbose_name="Descrição da Galeria")
     event_date = models.DateField(null=True, blank=True, verbose_name="Data do Evento")
 
-    # Campo para a marca d'água selecionada (nome do arquivo)
     watermark_choice = models.CharField(
         max_length=100,
         choices=get_watermark_choices(),
@@ -225,19 +206,9 @@ class Image(models.Model):
     def __str__(self):
         return f"Imagem: {self.original_file_name or self.image_file_original.name.split('/')[-1]} (Galeria: {self.galeria.name})"
 
-    # Override do método save para disparar a tarefa Celery
     def save(self, *args, **kwargs):
-        # Flag para saber se é a primeira vez que o objeto está sendo salvo
         is_new_image = self._state.adding
-
-        # Salva a instância primeiro. Isso é crucial para que o objeto tenha um PK
-        # e o arquivo original esteja salvo no disco para a tarefa Celery.
         super().save(*args, **kwargs)
-
-        # Dispara a tarefa Celery APENAS SE for uma nova imagem
-        # OU se a imagem original existe mas as processadas (thumb/watermarked) ainda não foram geradas.
-        # O uso de transaction.on_commit() garante que a tarefa só seja enviada
-        # após a transação do banco de dados ser confirmada.
         if is_new_image or (self.image_file_original and not self.image_file_thumb and not self.image_file_watermarked):
             transaction.on_commit(lambda: process_image_task.delay(self.pk))
             print(f"Disparada tarefa Celery para processar imagem {self.pk} (após commit da transação).")
@@ -262,42 +233,8 @@ class GaleriaLike(models.Model):
     class Meta:
         verbose_name = 'Curtida de Galeria'
         verbose_name_plural = 'Curtidas de Galerias'
-        # Garante que um usuário só pode curtir uma galeria uma única vez
         unique_together = ('user', 'galeria')
-        ordering = ['-created_at'] # Ordena as curtidas pelas mais recentes
+        ordering = ['-created_at']
 
     def __str__(self):
         return f'{self.user.username} curtiu {self.galeria.name}'
-
-# --- NOVO MODELO: VisitCounter (para o contador de visitas) ---
-class VisitCounter(models.Model):
-    # O campo `count` armazenará o número total de visitas.
-    # Usamos `default=0` para garantir que ele comece em zero.
-    count = models.PositiveIntegerField(default=0, verbose_name="Contador de Visitas")
-
-    class Meta:
-        verbose_name = 'Contador de Visitas'
-        verbose_name_plural = 'Contadores de Visitas'
-        # Adiciona uma restrição para garantir que só haja uma única linha na tabela.
-        # Isso é crucial para um contador global.
-        constraints = [
-            models.UniqueConstraint(fields=['id'], name='unique_visit_counter')
-        ]
-
-    def __str__(self):
-        return f"Total de Visitas: {self.count}"
-
-    # Método para incrementar o contador de forma segura
-    @classmethod
-    def increment(cls):
-        # Usa select_for_update para bloquear a linha durante a atualização,
-        # prevenindo condições de corrida em ambientes multi-threaded/multi-process.
-        with transaction.atomic():
-            counter, created = cls.objects.select_for_update().get_or_create(
-                id=1,  # Usamos um ID fixo para garantir que sempre atualizamos a mesma linha
-                defaults={'count': 0}
-            )
-            counter.count += 1
-            counter.save()
-            return counter.count
-
