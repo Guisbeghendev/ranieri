@@ -214,7 +214,8 @@ LOGGING = {
         'file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': '/var/www/escolajoseranieri.com.br/html/django_debug.log', # Caminho para o novo log de depuração
+            # ALtere esta linha:
+            'filename': '/var/www/escolajoseranieri.com.br/html/logs/django_debug.log', # Caminho para o novo log de depuração
         },
         'console': {
             'level': 'DEBUG',
@@ -227,18 +228,16 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
         },
-        'ranieri_project': { # Ajuste para o nome do seu projeto principal
+        'ranieri_project': {
             'handlers': ['file', 'console'],
             'level': 'DEBUG',
             'propagate': True,
         },
-        'core': { # Exemplo, adicione seus apps aqui
+        'core': {
             'handlers': ['file', 'console'],
             'level': 'DEBUG',
             'propagate': True,
         },
-        # Adicione outros loggers para seus apps conforme necessário
     },
 }
 # --- FIM DA CONFIGURAÇÃO DE LOGGING PARA DEBUG ---
-
