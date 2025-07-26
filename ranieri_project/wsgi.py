@@ -12,16 +12,14 @@ import sys
 import site
 
 # Adiciona o caminho do site-packages do seu ambiente virtual (venv) ao sys.path.
-# Isso é crucial para que o mod_wsgi encontre o Django e suas dependências.
-# Verifique se 'python3.12' é a versão correta do Python no seu venv.
-# Para confirmar: ls /var/www/escolajoseranieri.com.br/venv/lib/
 site_packages_path = '/var/www/escolajoseranieri.com.br/venv/lib/python3.12/site-packages'
 site.addsitedir(site_packages_path)
 
 # Adiciona o diretório raiz do seu projeto Django ao sys.path.
-# Isso permite que o Django encontre seus próprios módulos e apps.
 sys.path.append('/var/www/escolajoseranieri.com.br/html')
 
+# Adiciona o binário do python do venv ao PATH do sistema (importante para mod_wsgi).
+os.environ['PATH'] = '/var/www/escolajoseranieri.com.br/venv/bin:' + os.environ.get('PATH', '')
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ranieri_project.settings')
 
