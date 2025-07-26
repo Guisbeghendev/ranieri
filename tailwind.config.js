@@ -1,13 +1,26 @@
+// tailwind.config.js
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+module.exports = { // Adaptado de 'export default' para Node.js
   content: [
-    "./templates/**/*.html",
-    "./*/templates/**/*.html",
-    "./ranieri_project/**/*.html",
-    './node_modules/preline/**/*.js'
+    // Estes são os caminhos onde o Tailwind vai PROCURAR por classes que você usar nos seus HTMLs.
+    // Como você ainda não tem HTMLs prontos, ele não encontrará classes AGORA,
+    // o que é normal. No FUTURO, quando tiver HTMLs, ele vai escanear essas pastas.
+    "./templates/**/*.html", // Para templates na raiz do seu projeto Django (ex: proj001-ranieri/templates/...)
+    "./*/templates/**/*.html", // Para templates dentro de apps Django (ex: proj001-ranieri/myapp/templates/...)
+    "./ranieri_project/**/*.html", // Para qualquer HTML dentro da pasta ranieri_project
+    // Se você usa classes Tailwind em arquivos JavaScript/TypeScript (no frontend), adicione os caminhos aqui:
+    // "./ranieri_project/**/*.{js,ts,jsx,tsx}",
+    // Adicione o caminho para os arquivos do Preline UI
+    './node_modules/preline/preline.js',
   ],
   theme: {
     extend: {
+      // SUAS CORES PERSONALIZADAS ESTÃO AQUI, CONFORME SOLICITADO.
+      // Para Tailwind CSS v4.x.x, a forma PREFERENCIAL de gerar classes de utilidade (ex: bg-roxo1)
+      // a partir dessas cores é definindo-as no seu arquivo CSS principal (ex: main.css)
+      // dentro do bloco @theme { ... }.
+      // No entanto, defini-las aqui as torna disponíveis como variáveis CSS (ex: var(--tw-roxo1))
+      // e para outras extensões de tema ou plugins.
       colors: {
         'roxo1': '#61152d',
         'roxo2': '#681630',
@@ -30,10 +43,10 @@ module.exports = {
         'laranja1-hover': '#e0b223',
         'laranja2-hover': '#e6a032',
         'laranja1-focus': '#f3c734',
-      },
+      }
     },
   },
   plugins: [
-    require('preline/plugin'),
+          require('preline/plugin'), // Adicione o plugin do Preline UI aqui
   ],
-}
+};
