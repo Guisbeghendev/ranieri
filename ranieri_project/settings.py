@@ -187,15 +187,15 @@ ANONYMOUS_USER_NAME = 'AnonymousUser'
 ANONYMOUS_USER_ID = -1  # ou qualquer ID que não conflite com IDs de usuários reais
 
 
-# Configurações do Celery (AGORA COMENTADAS, POIS NÃO ESTÃO EM USO)
-# CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL')
-# CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND')
-CELERY_ACCEPT_CONTENT = ['json'] # Conteúdo aceito para tarefas
-CELERY_TASK_SERIALIZER = 'json' # Serializador para tarefas
-CELERY_RESULT_SERIALIZER = 'json' # Serializador para resultados
-CELERY_TIMEZONE = 'America/Sao_Paulo' # Use o mesmo fuso horário do Django
-CELERY_TASK_TRACK_STARTED = True # Rastreia o estado 'STARTED' da tarefa
-CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True # Tenta reconectar ao broker na inicialização
+# Configurações do Celery
+CELERY_BROKER_URL = 'amqp://celeryuser:Gsp@ranieri2025@localhost:5672//'
+CELERY_RESULT_BACKEND = 'rpc://' # ou 'amqp://celeryuser:Gsp@ranieri2025@localhost:5672//' se preferir resultados no RabbitMQ
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'America/Sao_Paulo'
+CELERY_TASK_TRACK_STARTED = True
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
 # Configurações de segurança adicionais para produção (já estavam aqui)
 CSRF_COOKIE_SECURE = True
