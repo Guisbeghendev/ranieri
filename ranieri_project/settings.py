@@ -114,7 +114,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'ranieri_db', # Nome do seu banco de dados MySQL
-        'USER': 'bdranieri', # Seu usuário MySQL
+        'USER': 'guisbeghendev', # Seu usuário MySQL
         'PASSWORD': 'Gsp@root2025', # Sua senha MySQL
         'HOST': 'localhost', # Geralmente 'localhost' se o DB está no mesmo servidor, ou o IP/hostname do DB
         'PORT': '3306', # Porta padrão do MySQL
