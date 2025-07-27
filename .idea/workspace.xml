@@ -5,9 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c3af7e0a-b100-4e4e-8057-e149b23ff5fe" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/build-tailwind.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -104,7 +103,7 @@
       <workItem from="1752001744155" duration="162214000" />
       <workItem from="1752684818223" duration="3134000" />
       <workItem from="1752697907811" duration="2507000" />
-      <workItem from="1752702724891" duration="121172000" />
+      <workItem from="1752702724891" duration="121879000" />
     </task>
     <servers />
   </component>
