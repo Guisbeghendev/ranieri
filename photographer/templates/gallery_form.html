@@ -18,12 +18,22 @@
                         <span class="text-red-500">*</span>
                     {% endif %}
                 </label>
-                {# Tratamento específico para o campo 'audience_groups' #}
+
+                {# Tratamento específico para o campo 'audience_groups' (CheckboxSelectMultiple) #}
+                {# O widget_tweaks precisa de uma forma diferente de aplicar classes a itens de lista/labels #}
                 {% if field.name == 'audience_groups' %}
                     <div class="w-full">
-                        {{ field|attr:"item_attrs:class:mb-2"|attr:"label_attrs:class:whitespace-normal" }}
+                        {# Renderiza cada checkbox individualmente para ter controle sobre a estilização #}
+                        {% for checkbox in field %}
+                            <div class="flex items-center mb-2"> {# Aplica mb-2 ao item #}
+                                {{ checkbox.tag }} {# Renderiza o input checkbox #}
+                                <label for="{{ checkbox.id_for_label }}" class="ml-2 text-gray-900 whitespace-normal"> {# Aplica whitespace-normal ao label #}
+                                    {{ checkbox.choice_label }}
+                                </label>
+                            </div>
+                        {% endfor %}
                     </div>
-                {# NOVO: Tratamento específico para o campo 'watermark_choice' #}
+                {# Tratamento específico para o campo 'watermark_choice' (Select) #}
                 {% elif field.name == 'watermark_choice' %}
                     <select name="{{ field.name }}" id="{{ field.id_for_label }}"
                             class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
@@ -31,17 +41,22 @@
                             <option value="{{ value }}" {% if field.value == value %}selected{% endif %}>{{ text }}</option>
                         {% endfor %}
                     </select>
+                {# Tratamento para Textarea #}
+                {% elif field.field.widget.input_type == 'textarea' %}
+                    {{ field|add_class:"mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm h-32" }}
+                {# Tratamento para Checkbox (singular) #}
                 {% elif field.field.widget.input_type == 'checkbox' %}
                     <div class="flex items-center">
                         {{ field }}
                         <span class="ml-2 text-gray-900">{{ field.label }}</span>
                     </div>
+                {# Tratamento para Date Input #}
                 {% elif field.field.widget.input_type == 'date' %}
                     <input type="date" name="{{ field.name }}" id="{{ field.id_for_label }}"
                            value="{{ field.value|date:'Y-m-d' }}"
                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                 {% else %}
-                    {# Estilos padrão para outros campos de input #}
+                    {# Estilos padrão para outros campos de input (text, email, number, password, etc.) #}
                     {{ field|add_class:"mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" }}
                 {% endif %}
 
