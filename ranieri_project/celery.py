@@ -3,9 +3,13 @@
 import os
 from celery import Celery
 
-# Define a variável de ambiente padrão para as configurações do Django
-# Isso garante que o Celery use as configurações do seu projeto Django.
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ranieri_project.settings')
+# Define a variável de ambiente padrão para as configurações do Django.
+# IMPORTANTE: Usa os.getenv para verificar se a variável DJANGO_SETTINGS_MODULE
+# já está definida (por exemplo, pelo Supervisor no ambiente de staging).
+# Se estiver definida (ex: "ranieri_project.staging"), usa esse valor.
+# Caso contrário (ex: ambiente de desenvolvimento local), usa "ranieri_project.settings".
+settings_module = os.getenv('DJANGO_SETTINGS_MODULE', 'ranieri_project.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', settings_module)
 
 # Cria uma instância do aplicativo Celery
 # O nome 'ranieri_project' é o nome do seu projeto Django.
@@ -13,7 +17,7 @@ app = Celery('ranieri_project')
 
 # Carrega as configurações do Celery a partir do objeto de configurações do Django.
 # O prefixo 'CELERY_' significa que todas as variáveis de configuração do Celery
-# em settings.py devem começar com 'CELERY_'.
+# em settings.py (ou staging.py, etc.) devem começar com 'CELERY_'.
 app.config_from_object('django.conf:settings', namespace='CELERY')
 
 # Descobre e registra automaticamente as tarefas de todos os aplicativos Django.
