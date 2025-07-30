@@ -224,43 +224,61 @@
                 },
                 body: JSON.stringify({}) // Corpo vazio para POST simples
             })
-            .then(response => response.json())
+            .then(response => { // MODIFICAÇÃO AQUI: Adiciona tratamento para respostas não-OK
+                if (!response.ok) {
+                    // Se a resposta não for OK (status 200-299), tenta ler o JSON de erro
+                    return response.json().then(err => {
+                        throw new Error(err.message || 'Erro desconhecido do servidor.');
+                    }).catch(() => {
+                        // Se não conseguir ler o JSON (ex: resposta HTML de erro 403/500), lança erro genérico
+                        throw new Error(`Erro do servidor: ${response.status} ${response.statusText}`);
+                    });
+                }
+                return response.json(); // Se a resposta for OK, processa o JSON
+            })
             .then(data => {
-                userHasLiked = data.liked;
-                likesCountSpan.textContent = data.likes_count;
+                // Verifica o campo 'success' retornado pela view Django
+                if (data.success) {
+                    userHasLiked = data.liked;
+                    likesCountSpan.textContent = data.likes_count;
 
-                // Atualiza o ícone do coração
-                if (userHasLiked) {
-                    likeIcon.innerHTML = `<path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>`;
-                    likeButton.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
-                    likeButton.classList.add('bg-red-500', 'text-white', 'hover:bg-red-600');
-                } else {
-                    likeIcon.innerHTML = `<path fill-rule="evenodd" d="M3.172 5.172a4 4 0 00-5.656 5.656L10 17.657l6.828-6.829a4 4 0 00-5.656-5.656L10 6.343l-1.172-1.171a4 4 0 00-5.656 0z" clip-rule="evenodd"></path>`;
-                    likeButton.classList.remove('bg-red-500', 'text-white', 'hover:bg-red-600');
-                    likeButton.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
-                }
+                    // Atualiza o ícone do coração
+                    if (userHasLiked) {
+                        likeIcon.innerHTML = `<path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>`;
+                        likeButton.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+                        likeButton.classList.add('bg-red-500', 'text-white', 'hover:bg-red-600');
+                    } else {
+                        likeIcon.innerHTML = `<path fill-rule="evenodd" d="M3.172 5.172a4 4 0 00-5.656 5.656L10 17.657l6.828-6.829a4 4 0 00-5.656-5.656L10 6.343l-1.172-1.171a4 4 0 00-5.656 0z" clip-rule="evenodd"></path>`;
+                        likeButton.classList.remove('bg-red-500', 'text-white', 'hover:bg-red-600');
+                        likeButton.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+                    }
 
-                // Atualiza o botão "Ver quem curtiu" e o modal
-                const viewLikersButton = document.getElementById('view-likers-button');
-                if (data.likes_count > 0) {
-                    if (!viewLikersButton) { // Se o botão não existe, cria
-                        const newButton = document.createElement('button');
-                        newButton.id = 'view-likers-button';
-                        newButton.className = 'ml-4 text-roxo2 hover:underline';
-                        newButton.textContent = 'Ver quem curtiu';
-                        newButton.onclick = openLikersModal;
-                        likeButton.parentNode.insertBefore(newButton, likeButton.nextSibling);
+                    // Atualiza o botão "Ver quem curtiu" e o modal
+                    const viewLikersButton = document.getElementById('view-likers-button');
+                    if (data.likes_count > 0) {
+                        if (!viewLikersButton) { // Se o botão não existe, cria
+                            const newButton = document.createElement('button');
+                            newButton.id = 'view-likers-button';
+                            newButton.className = 'ml-4 text-roxo2 hover:underline';
+                            newButton.textContent = 'Ver quem curtiu';
+                            newButton.onclick = openLikersModal;
+                            likeButton.parentNode.insertBefore(newButton, likeButton.nextSibling);
+                        }
+                    } else {
+                        if (viewLikersButton) { // Se o botão existe, remove
+                            viewLikersButton.remove();
+                        }
                     }
+                    updateLikersModalContent(data.likers, data.total_likers_count);
                 } else {
-                    if (viewLikersButton) { // Se o botão existe, remove
-                        viewLikersButton.remove();
-                    }
+                    // Se a view retornou success: False, exibe a mensagem de erro específica
+                    alert('Erro ao processar curtida: ' + data.message);
                 }
-                updateLikersModalContent(data.likers, data.total_likers_count);
             })
             .catch(error => {
-                console.error('Erro ao curtir/descurtir:', error);
-                alert('Ocorreu um erro ao processar sua curtida. Tente novamente.');
+                console.error('Erro na requisição AJAX:', error);
+                // Exibe a mensagem de erro capturada no .then ou no .catch
+                alert('Ocorreu um erro ao processar sua curtida. Detalhes: ' + error.message);
             });
         });
 
@@ -377,4 +395,3 @@
         // Nada específico para redimensionar aqui, pois o CSS já lida com max-width/height
     });
 </script>
-{% endblock %}

@@ -6,7 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="c3af7e0a-b100-4e4e-8057-e149b23ff5fe" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/galleries/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/galleries/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/galleries/templates/client_gallery_detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/galleries/templates/client_gallery_detail.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,6 +60,7 @@
     "RunOnceActivity.OpenDjangoStructureViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
+    "RunOnceActivity.pycharm.django.structure.promotion.once.per.project": "true",
     "git-widget-placeholder": "staging",
     "ignore.virus.scanning.warn.message": "true",
     "last_opened_file_path": "C:/Users/guisb/Documents/PROJETOS/MEUS_ROOTS/RANIERI/DJANGO/proj001-ranieri/templates/includes",
@@ -152,7 +153,7 @@
       <workItem from="1752684818223" duration="3134000" />
       <workItem from="1752697907811" duration="2507000" />
       <workItem from="1752702724891" duration="125895000" />
-      <workItem from="1753713914216" duration="7365000" />
+      <workItem from="1753713914216" duration="8268000" />
     </task>
     <servers />
   </component>
