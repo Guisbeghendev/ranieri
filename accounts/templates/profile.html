@@ -87,20 +87,8 @@
             </div>
         </div>
 
-        {# Nova Linha para Grupos de Audiência (ocupando todas as 3 colunas em telas grandes) #}
-        {# ESTE CARD AGORA É DEDICADO APENAS ÀS GALERIAS PRIVADAS POR GRUPO DE AUDIÊNCIA #}
-        <div class="bg-prata1 p-6 rounded-lg shadow-md lg:col-span-3">
-            <h2 class="text-2xl font-semibold text-roxo1 mb-4">Minhas Galerias por Grupo de Audiência</h2>
-            {% if audience_groups %} {# AQUI CONTINUA USANDO audience_groups para galerias #}
-                <ul class="list-disc list-inside text-preto1">
-                    {% for group in audience_groups %}
-                        <li class="mb-1">{{ group.name }}</li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p class="text-preto1">Você não possui acesso a galerias por grupo de audiência no momento.</p>
-            {% endif %}
-        </div>
+        {# O card "Nova Linha para Grupos de Audiência" foi removido daqui #}
+
     </div>
 </div>
 {% endblock %}

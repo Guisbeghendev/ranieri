@@ -6,7 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="c3af7e0a-b100-4e4e-8057-e149b23ff5fe" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/galleries_pub/templates/public_gallery_detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/galleries_pub/templates/public_gallery_detail.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/accounts/templates/profile.html" beforeDir="false" afterPath="$PROJECT_DIR$/accounts/templates/profile.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -31,21 +31,21 @@
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "Guisbeghendev"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;Guisbeghendev&quot;
   }
-}]]></component>
+}</component>
   <component name="GithubDefaultAccount">
     <option name="defaultAccountId" value="fe39ae58-3287-4527-9e60-d12a3e80fa8d" />
   </component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "git@github.com:Guisbeghendev/ranieri.git",
-    "accountId": "fe39ae58-3287-4527-9e60-d12a3e80fa8d"
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;git@github.com:Guisbeghendev/ranieri.git&quot;,
+    &quot;accountId&quot;: &quot;fe39ae58-3287-4527-9e60-d12a3e80fa8d&quot;
   }
-}]]></component>
+}</component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 3
 }</component>
@@ -60,7 +60,9 @@
     "RunOnceActivity.OpenDjangoStructureViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
+    "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.pycharm.django.structure.promotion.once.per.project": "true",
+    "django.template.preview.state": "SHOW_EDITOR_AND_PREVIEW",
     "git-widget-placeholder": "staging",
     "ignore.virus.scanning.warn.message": "true",
     "last_opened_file_path": "C:/Users/guisb/Documents/PROJETOS/MEUS_ROOTS/RANIERI/DJANGO/proj001-ranieri/templates/includes",
@@ -153,7 +155,8 @@
       <workItem from="1752684818223" duration="3134000" />
       <workItem from="1752697907811" duration="2507000" />
       <workItem from="1752702724891" duration="125895000" />
-      <workItem from="1753713914216" duration="13733000" />
+      <workItem from="1753713914216" duration="14820000" />
+      <workItem from="1753879721541" duration="203000" />
     </task>
     <servers />
   </component>
