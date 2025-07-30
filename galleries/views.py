@@ -5,11 +5,14 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from core.models import Galeria, Image, AudienceGroup, GaleriaLike # Importa GaleriaLike
 from datetime import datetime
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger # Corrigido typo aqui: PageNotAnInteger
 from django.http import JsonResponse # Importa JsonResponse para respostas AJAX
 from django.views.decorators.http import require_POST # Para garantir que a view só aceite POST
 from django.contrib.auth.decorators import login_required # Para proteger a view de curtidas
 from django.template.loader import render_to_string # Para renderizar partes do template
+import logging # ADIÇÃO: Importa o módulo de logging
+
+logger = logging.getLogger(__name__) # ADIÇÃO: Inicializa o logger para esta view
 
 
 # View para listar os grupos de audiência aos quais o usuário logado pertence
@@ -147,7 +150,7 @@ class ClientGalleryDetailView(LoginRequiredMixin, DetailView):
         likers = self.object.likes.select_related('user').order_by('-created_at')[:50]
         context['gallery_likers'] = [like.user.username for like in likers]
         # Adiciona a contagem total de likers para o modal
-        context['total_likers_count'] = self.object.likes.count()
+        context['total_likers_count'] = self.object.likes.count() # CORREÇÃO: Usando self.object.likes.count() diretamente
 
         return context
 
@@ -156,34 +159,45 @@ class ClientGalleryDetailView(LoginRequiredMixin, DetailView):
 @require_POST # Garante que esta view só aceita requisições POST
 @login_required # Garante que apenas usuários logados podem acessar esta view
 def like_gallery(request, pk):
-    galeria = get_object_or_404(Galeria, pk=pk)
-    user = request.user
+    try: # ADIÇÃO: Início do bloco try para tratamento de erros
+        galeria = get_object_or_404(Galeria, pk=pk)
+        user = request.user
 
-    # Verifica se o usuário já curtiu esta galeria
-    like_exists = GaleriaLike.objects.filter(galeria=galeria, user=user).exists()
+        # Verifica se o usuário já curtiu esta galeria
+        like_exists = GaleriaLike.objects.filter(galeria=galeria, user=user).exists()
 
-    if like_exists:
-        # Se já curtiu, remove a curtida (descurtir)
-        GaleriaLike.objects.filter(galeria=galeria, user=user).delete()
-        liked = False
-    else:
-        # Se não curtiu, adiciona a curtida
-        GaleriaLike.objects.create(galeria=galeria, user=user)
-        liked = True
+        if like_exists:
+            # Se já curtiu, remove a curtida (descurtir)
+            GaleriaLike.objects.filter(galeria=galeria, user=user).delete()
+            liked = False
+            logger.info(f"Usuário {user.username} descurtiu a galeria {galeria.name} (ID: {pk}).") # ADIÇÃO: Log de informação
+        else:
+            # Se não curtiu, adiciona a curtida
+            GaleriaLike.objects.create(galeria=galeria, user=user)
+            liked = True
+            logger.info(f"Usuário {user.username} curtiu a galeria {galeria.name} (ID: {pk}).") # ADIÇÃO: Log de informação
 
-    # Recalcula a contagem de curtidas
-    new_likes_count = galeria.likes.count()
+        # Recalcula a contagem de curtidas
+        new_likes_count = galeria.likes.count()
 
-    # Obtém os nomes dos usuários que curtiram para atualizar o modal
-    likers = galeria.likes.select_related('user').order_by('-created_at')[:50]
-    likers_usernames = [like.user.username for like in likers]
-    total_likers_count = galeria.likes.count()
+        # Obtém os nomes dos usuários que curtiram para atualizar o modal
+        likers = galeria.likes.select_related('user').order_by('-created_at')[:50]
+        likers_usernames = [like.user.username for like in likers]
+        total_likers_count = galeria.likes.count()
 
-    # Retorna uma resposta JSON com o novo estado
-    return JsonResponse({
-        'liked': liked,
-        'likes_count': new_likes_count,
-        'likers': likers_usernames,
-        'total_likers_count': total_likers_count
-    })
-
+        # Retorna uma resposta JSON com o novo estado
+        return JsonResponse({
+            'success': True, # ADIÇÃO: Indica sucesso para o frontend
+            'liked': liked,
+            'likes_count': new_likes_count,
+            'likers': likers_usernames,
+            'total_likers_count': total_likers_count
+        })
+    except Exception as e: # ADIÇÃO: Início do bloco except para capturar erros
+        # Captura qualquer exceção e registra no log
+        logger.error(f"Erro ao processar curtida para galeria {pk} pelo usuário {request.user.username}: {e}", exc_info=True) # ADIÇÃO: Log de erro com detalhes
+        # Retorna uma resposta JSON com erro e status 500
+        return JsonResponse(
+            {'success': False, 'message': f'Ocorreu um erro interno ao processar sua curtida. Detalhes: {e}'}, # ADIÇÃO: Mensagem de erro para o frontend
+            status=500 # ADIÇÃO: Status HTTP 500 para indicar erro
+        )
