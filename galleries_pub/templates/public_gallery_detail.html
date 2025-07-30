@@ -18,7 +18,7 @@
         </p>
 
         ---
-        {# NOVO: Seção de Curtidas da Galeria #}
+        {# Seção de Curtidas da Galeria #}
         <div class="flex items-center justify-center mt-4">
             <span class="text-roxo1 text-lg font-semibold mr-2">
                 Likes: <span id="gallery-likes-count-{{ gallery.pk }}">{{ gallery.likes.count }}</span>
@@ -29,7 +29,7 @@
                         class="like-button px-4 py-2 rounded-lg shadow-md transition duration-300
                                 {% if user_has_liked %}bg-red-500 hover:bg-red-600 text-white{% else %}bg-roxo2 hover:bg-roxo1 text-white{% endif %}"
                         data-gallery-id="{{ gallery.pk }}"
-                        data-url="{% url 'galleries_pub:like_public_gallery' pk=gallery.pk %}">
+                        data-liked="{{ user_has_liked|yesno:'true,false' }}"> {# Adicionado data-liked para o JS #}
                     {% if user_has_liked %}Descurtir{% else %}Curtir{% endif %}
                 </button>
             {% else %}
@@ -52,18 +52,15 @@
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 image-grid">
             {% for image in images %}
                 <a class="group block relative overflow-hidden rounded-lg cursor-pointer transform hover:scale-105 transition-transform duration-300 ease-in-out"
-                   {# Adicionando data-image-url e data-index para o JS de navegação #}
-                   data-image-url="{% if image.image_file_watermarked %}{{ image.image_file_watermarked.url }}{% elif image.image_file_original %}{{ image.image_file_original.url }}{% else %}https://placehold.co/800x600/e0e0e0/555555?text=Imagem+Nao+Disponivel{% endif %}" {# CORRIGIDO #}
+                   data-image-url="{% if image.image_file_watermarked %}{{ image.image_file_watermarked.url }}{% elif image.image_file_original %}{{ image.image_file_original.url }}{% else %}https://placehold.co/800x600/e0e0e0/555555?text=Imagem+Nao+Disponivel{% endif %}"
                    data-index="{{ forloop.counter0 }}"
                    onclick="openModal(this)">
 
-                    {# Imagem da galeria - usa thumbnail #}
                     <img class="w-full h-40 object-cover bg-prata1 rounded-lg border border-gray-200"
-                         src="{% if image.image_file_thumb %}{{ image.image_file_thumb.url }}{% elif image.image_file_original %}{{ image.image_file_original.url }}{% else %}https://placehold.co/400x300/e0e0e0/555555?text=Sem+Imagem{% endif %}" {# CORRIGIDO #}
+                         src="{% if image.image_file_thumb %}{{ image.image_file_thumb.url }}{% elif image.image_file_original %}{{ image.image_file_original.url }}{% else %}https://placehold.co/400x300/e0e0e0/555555?text=Sem+Imagem{% endif %}"
                          alt="{{ gallery.name }} - Imagem {{ forloop.counter }}"
                          loading="lazy">
 
-                    {# Overlay de "View" ao passar o mouse #}
                     <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <div class="flex items-center gap-x-1 py-1 px-2 bg-white border border-gray-200 text-gray-800 rounded-lg">
                             <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
@@ -75,7 +72,6 @@
         </div>
 
     {% else %}
-        {# Mensagem exibida se não houver imagens na galeria #}
         <p class="text-preto1 text-center py-8 text-lg bg-prata1 rounded-lg shadow-sm">
             <span class="font-bold">Ops!</span> Nenhuma imagem disponível para esta galeria ainda.
             <br>Por favor, verifique novamente mais tarde ou entre em contato com o fotógrafo.
@@ -85,32 +81,26 @@
 
 <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50 hidden p-4">
     <div class="relative max-w-4xl max-h-[90vh] mx-auto bg-white rounded-lg shadow-xl overflow-hidden">
-        {# Botão de Fechar o modal #}
         <button class="absolute top-3 right-3 text-white bg-gray-800 rounded-full p-2 text-2xl font-bold z-10 hover:bg-gray-600 transition-colors duration-200" onclick="closeModal()" aria-label="Fechar Imagem">
             &times;
         </button>
 
-        {# Botão Anterior - Adicionado com posicionamento central #}
         <button id="prevBtn" class="absolute left-3 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white p-3 rounded-full text-2xl z-10 hover:bg-gray-600 transition-colors duration-200" onclick="showPreviousImage()" aria-label="Imagem Anterior">
             &#10094;
         </button>
 
-        {# Botão Próxima - Adicionado com posicionamento central #}
         <button id="nextBtn" class="absolute right-3 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white p-3 rounded-full text-2xl z-10 hover:bg-gray-600 transition-colors duration-200" onclick="showNextImage()" aria-label="Próxima Imagem">
             &#10095;
         </button>
 
-        {# Imagem Principal do Modal #}
         <img id="modalImage" src="" alt="Imagem em destaque da galeria" class="max-w-full max-h-[80vh] object-contain mx-auto block rounded-t-lg">
 
-        {# Legenda da imagem no modal (Agora opcional) #}
         <div id="modalCaption" class="bg-gray-800 text-white text-center py-2 px-4 text-sm hidden">
             Legenda da Imagem
         </div>
     </div>
 </div>
 
-{# Botão "Voltar ao Topo" #}
 <button id="backToTopBtn" class="fixed bottom-8 right-8 bg-roxo2 text-branco1 p-3 rounded-full shadow-lg hover:bg-roxo1 transition-colors duration-300 hidden" aria-label="Voltar ao Topo">
     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
 </button>
@@ -118,8 +108,7 @@
 {% endblock %}
 
 {% block extra_js %}
-    {# Inclua jQuery se ainda não estiver carregado globalmente #}
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    {# jQuery foi removido daqui. O script de like agora usa Fetch API #}
 
     <script>
         let currentImageIndex = 0;
@@ -132,72 +121,107 @@
                 imageUrls.push(link.getAttribute('data-image-url'));
             });
 
-            // Esconde a legenda se estiver vazia (opcional, já estava no seu código)
+            // Esconde a legenda se estiver vazia
             const modalCaption = document.getElementById('modalCaption');
             if (modalCaption && modalCaption.innerText.trim() === '') {
                 modalCaption.classList.add('hidden');
             }
 
-            // NOVO: Inicializa o evento de click para o botão de like
-            $('.like-button').on('click', function() {
-                var galleryId = $(this).data('gallery-id');
-                var url = $(this).data('url');
-                var button = $(this);
-                var likesCountSpan = $('#gallery-likes-count-' + galleryId);
+            // --- Lógica de Curtidas (JS) - AGORA USANDO FETCH API ---
+            const likeButton = document.getElementById('like-button-{{ gallery.pk }}');
+            const likesCountSpan = document.getElementById('gallery-likes-count-{{ gallery.pk }}');
+            const galleryId = likeButton.dataset.galleryId;
+            let userHasLiked = likeButton.dataset.liked === 'true'; // Pega o estado inicial do like
 
-                $.ajax({
-                    url: url,
-                    type: 'POST',
-                    data: {
-                        csrfmiddlewaretoken: '{{ csrf_token }}' // CRÍTICO para segurança do Django
-                    },
-                    success: function(response) {
-                        likesCountSpan.text(response.likes_count);
-                        if (response.liked) {
-                            button.text('Descurtir').removeClass('bg-roxo2 hover:bg-roxo1').addClass('bg-red-500 hover:bg-red-600');
-                        } else {
-                            button.text('Curtir').removeClass('bg-red-500 hover:bg-red-600').addClass('bg-roxo2 hover:bg-roxo1');
+            // Função para obter o token CSRF do cookie
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
                         }
-                        console.log(response.message);
-                        // Opcional: mostrar uma mensagem de feedback para o usuário
-                        // alert(response.message);
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("Erro ao curtir/descurtir:", error);
-                        alert("Ocorreu um erro ao processar o like. Por favor, tente novamente.");
                     }
+                }
+                return cookieValue;
+            }
+
+            if (likeButton) { // Garante que o botão existe antes de adicionar o listener
+                likeButton.addEventListener('click', function() {
+                    // Verifica se o usuário está logado
+                    if (!{{ user.is_authenticated|lower }}) {
+                        alert('Você precisa estar logado para curtir uma galeria.');
+                        window.location.href = "{% url 'account_login' %}";
+                        return;
+                    }
+
+                    const csrftoken = getCookie('csrftoken');
+
+                    fetch(`{% url 'galleries_pub:like_public_gallery' pk=gallery.pk %}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrftoken,
+                        },
+                        body: JSON.stringify({}) // Corpo vazio para POST simples
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(err => {
+                                throw new Error(err.message || 'Erro desconhecido do servidor.');
+                            }).catch(() => {
+                                throw new Error(`Erro do servidor: ${response.status} ${response.statusText}`);
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // A view like_public_gallery já retorna 'liked' e 'likes_count'
+                        userHasLiked = data.liked;
+                        likesCountSpan.textContent = data.likes_count;
+
+                        // Atualiza as classes e o texto do botão
+                        if (userHasLiked) {
+                            likeButton.classList.remove('bg-roxo2', 'hover:bg-roxo1');
+                            likeButton.classList.add('bg-red-500', 'hover:bg-red-600');
+                            likeButton.textContent = 'Descurtir';
+                        } else {
+                            likeButton.classList.remove('bg-red-500', 'hover:bg-red-600');
+                            likeButton.classList.add('bg-roxo2', 'hover:bg-roxo1');
+                            likeButton.textContent = 'Curtir';
+                        }
+                        console.log(data.message);
+                    })
+                    .catch(error => {
+                        console.error("Erro ao curtir/descurtir:", error);
+                        alert("Ocorreu um erro ao processar o like. Por favor, tente novamente. Detalhes: " + error.message);
+                    });
                 });
-            });
+            }
         });
 
-        // Função para abrir o modal e iniciar a navegação (agora aceita o elemento clicado)
+        // Funções do modal de imagens
         function openModal(clickedElement) {
             currentImageIndex = parseInt(clickedElement.dataset.index);
-            updateModalImage(); // Atualiza a imagem e o estado dos botões
-
+            updateModalImage();
             document.getElementById('imageModal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden'; // Impede o scroll do body quando o modal está aberto
+            document.body.style.overflow = 'hidden';
         }
 
-        // Função para atualizar a imagem no modal e o estado dos botões
         function updateModalImage() {
             const modalImage = document.getElementById('modalImage');
             const prevBtn = document.getElementById('prevBtn');
             const nextBtn = document.getElementById('nextBtn');
-            const modalCaption = document.getElementById('modalCaption');
 
             modalImage.src = imageUrls[currentImageIndex];
 
-            // Nota: O seu código anterior para 'public_gallery_detail' não incluía legendas detalhadas.
-            // Se você precisar de legendas específicas para cada imagem, precisará adicionar 'data-caption' aos links da galeria.
-            // Por enquanto, a legenda no modal será genérica ou vazia, dependendo de como você a alimenta.
-
-            // Habilita/desabilita botões de navegação
             prevBtn.style.display = (currentImageIndex === 0) ? 'none' : 'block';
             nextBtn.style.display = (currentImageIndex === imageUrls.length - 1) ? 'none' : 'block';
         }
 
-        // Função para mostrar a próxima imagem
         function showNextImage() {
             if (currentImageIndex < imageUrls.length - 1) {
                 currentImageIndex++;
@@ -205,7 +229,6 @@
             }
         }
 
-        // Função para mostrar a imagem anterior
         function showPreviousImage() {
             if (currentImageIndex > 0) {
                 currentImageIndex--;
@@ -213,22 +236,18 @@
             }
         }
 
-        // Função para fechar o modal
         function closeModal() {
             document.getElementById('imageModal').classList.add('hidden');
-            document.getElementById('modalImage').src = ''; // Limpa a imagem ao fechar
-            document.body.style.overflow = ''; // Restaura o scroll do body
+            document.getElementById('modalImage').src = '';
+            document.body.style.overflow = '';
         }
 
-        // Fechar modal ao clicar fora da imagem (mas dentro do modal)
         document.getElementById('imageModal').addEventListener('click', function(event) {
-            // Permite fechar ao clicar no background ou na imagem, mas não nos botões de navegação.
             if (event.target === this || event.target.tagName === 'IMG') {
                 closeModal();
             }
         });
 
-        // Fechar modal com a tecla ESC e navegar com setas do teclado
         document.addEventListener('keydown', function(event) {
             if (document.getElementById('imageModal').classList.contains('hidden')) {
                 return;
@@ -260,7 +279,6 @@
             });
         });
 
-        // Adiciona um listener para garantir que o modal se redimensione com a janela
         window.addEventListener('resize', () => {
             // Nada específico para redimensionar aqui, pois o CSS já lida com max-width/height
         });
