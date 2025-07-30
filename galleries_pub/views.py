@@ -4,6 +4,12 @@ from core.models import Galeria, Image
 from datetime import datetime
 from django.db.models import Q
 
+# NOVO: Importações necessárias para a funcionalidade de like
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404
+from core.models import GaleriaLike # Importe GaleriaLike do seu app core
 
 # View para listar todas as galerias públicas
 class PublicGalleryListView(ListView):
@@ -61,4 +67,43 @@ class PublicGalleryDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['images'] = self.object.images.all().order_by('order', 'created_at')
+        # NOVO: Adiciona ao contexto se o usuário atual já curtiu esta galeria
+        if self.request.user.is_authenticated:
+            context['user_has_liked'] = GaleriaLike.objects.filter(
+                galeria=self.object,
+                user=self.request.user
+            ).exists()
+        else:
+            context['user_has_liked'] = False
         return context
+
+
+# NOVO: Função de view para lidar com o curtir/descurtir de galerias públicas via AJAX
+@login_required # Garante que apenas usuários logados possam curtir/descurtir
+@require_POST # Garante que a view só responda a requisições POST
+def like_public_gallery(request, pk):
+    # Obtém a galeria específica, garantindo que seja pública
+    galeria = get_object_or_404(Galeria, pk=pk, is_public=True)
+    user = request.user
+    liked = False
+    message = ''
+
+    # Verifica se o usuário já curtiu esta galeria
+    like_instance = GaleriaLike.objects.filter(galeria=galeria, user=user).first()
+
+    if like_instance:
+        # Se encontrou um like, o usuário está descurtindo
+        like_instance.delete()
+        message = 'Galeria descurtida com sucesso.'
+        liked = False
+    else:
+        # Se não encontrou, o usuário está curtindo
+        GaleriaLike.objects.create(galeria=galeria, user=user)
+        message = 'Galeria curtida com sucesso!'
+        liked = True
+
+    # Conta o número total de likes para a galeria
+    likes_count = GaleriaLike.objects.filter(galeria=galeria).count()
+
+    # Retorna uma resposta JSON
+    return JsonResponse({'liked': liked, 'likes_count': likes_count, 'message': message})
