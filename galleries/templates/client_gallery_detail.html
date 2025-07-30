@@ -216,7 +216,8 @@
 
             const csrftoken = getCookie('csrftoken');
 
-            fetch(`/galleries/${galleryId}/like/`, {
+            // CORREÇÃO AQUI: Altera a URL para 'galerias' em português
+            fetch(`/galerias/${galleryId}/like/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -224,20 +225,17 @@
                 },
                 body: JSON.stringify({}) // Corpo vazio para POST simples
             })
-            .then(response => { // MODIFICAÇÃO AQUI: Adiciona tratamento para respostas não-OK
+            .then(response => {
                 if (!response.ok) {
-                    // Se a resposta não for OK (status 200-299), tenta ler o JSON de erro
                     return response.json().then(err => {
                         throw new Error(err.message || 'Erro desconhecido do servidor.');
                     }).catch(() => {
-                        // Se não conseguir ler o JSON (ex: resposta HTML de erro 403/500), lança erro genérico
                         throw new Error(`Erro do servidor: ${response.status} ${response.statusText}`);
                     });
                 }
-                return response.json(); // Se a resposta for OK, processa o JSON
+                return response.json();
             })
             .then(data => {
-                // Verifica o campo 'success' retornado pela view Django
                 if (data.success) {
                     userHasLiked = data.liked;
                     likesCountSpan.textContent = data.likes_count;
@@ -271,13 +269,11 @@
                     }
                     updateLikersModalContent(data.likers, data.total_likers_count);
                 } else {
-                    // Se a view retornou success: False, exibe a mensagem de erro específica
                     alert('Erro ao processar curtida: ' + data.message);
                 }
             })
             .catch(error => {
                 console.error('Erro na requisição AJAX:', error);
-                // Exibe a mensagem de erro capturada no .then ou no .catch
                 alert('Ocorreu um erro ao processar sua curtida. Detalhes: ' + error.message);
             });
         });
