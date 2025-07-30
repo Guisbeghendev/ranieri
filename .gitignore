@@ -50,3 +50,7 @@ Thumbs.db          # Windows
 *.swp
 *~
 *.tmp
+
+
+# Arquivos de IDE (PyCharm)
+.idea/workspace.xml
