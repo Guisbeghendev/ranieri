@@ -11,5 +11,5 @@ urlpatterns = [
     # NOVO: Rota para ver os detalhes de uma galeria privada específica (MOD10)
     path('galeria/<int:pk>/detalhes/', views.ClientGalleryDetailView.as_view(), name='client_gallery_detail'),
     # NOVO: Rota para curtir/descurtir uma galeria (via AJAX)
-    path('galeria/<int:pk>/like/', views.like_gallery, name='like_gallery'),
+    path('<int:pk>/like/', views.like_gallery, name='like_gallery'),
 ]
