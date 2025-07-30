@@ -108,7 +108,7 @@
 {% endblock %}
 
 {% block extra_js %}
-    {# jQuery foi removido daqui. O script de like agora usa Fetch API #}
+    {# REMOVIDO: Incluir jQuery aqui. Agora o script usa Fetch API. #}
 
     <script>
         let currentImageIndex = 0;
@@ -150,11 +150,14 @@
             }
 
             if (likeButton) { // Garante que o botão existe antes de adicionar o listener
+                console.log("Botão de like encontrado e script de like carregado."); // DEBUG: Adicionado para verificar carregamento
                 likeButton.addEventListener('click', function() {
+                    console.log("Botão de like clicado!"); // DEBUG: Adicionado para verificar clique
+
                     // Verifica se o usuário está logado
                     if (!{{ user.is_authenticated|lower }}) {
                         alert('Você precisa estar logado para curtir uma galeria.');
-                        window.location.href = "{% url 'account_login' %}";
+                        window.location.href = "{% url 'account_login' %}"; // Use a URL de login do app de contas
                         return;
                     }
 
@@ -200,6 +203,8 @@
                         alert("Ocorreu um erro ao processar o like. Por favor, tente novamente. Detalhes: " + error.message);
                     });
                 });
+            } else {
+                console.error("Botão de like com ID 'like-button-{{ gallery.pk }}' não encontrado."); // DEBUG: Adicionado para depuração
             }
         });
 
