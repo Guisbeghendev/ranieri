@@ -16,28 +16,6 @@
         <p class="text-cinza1 text-center text-sm">
             Criado em: {{ gallery.created_at|date:"d/m/Y H:i" }} | Última atualização: {{ gallery.updated_at|date:"d/m/Y H:i" }}
         </p>
-
-        ---
-        {# Seção de Curtidas da Galeria #}
-        <div class="flex items-center justify-center mt-4">
-            <span class="text-roxo1 text-lg font-semibold mr-2">
-                Likes: <span id="gallery-likes-count-{{ gallery.pk }}">{{ gallery.likes.count }}</span>
-            </span>
-
-            {% if user.is_authenticated %}
-                <button id="like-button-{{ gallery.pk }}"
-                        class="like-button px-4 py-2 rounded-lg shadow-md transition duration-300
-                                {% if user_has_liked %}bg-red-500 hover:bg-red-600 text-white{% else %}bg-roxo2 hover:bg-roxo1 text-white{% endif %}"
-                        data-gallery-id="{{ gallery.pk }}"
-                        data-liked="{{ user_has_liked|yesno:'true,false' }}"> {# Adicionado data-liked para o JS #}
-                    {% if user_has_liked %}Descurtir{% else %}Curtir{% endif %}
-                </button>
-            {% else %}
-                <span class="text-cinza1 text-sm">Faça <a href="{% url 'account_login' %}" class="text-roxo2 hover:underline">login</a> para curtir.</span>
-            {% endif %}
-        </div>
-        ---
-
     </div>
 
     <div class="text-center mb-8">
@@ -105,182 +83,93 @@
     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
 </button>
 
-    <script>
-        let currentImageIndex = 0;
-        let imageUrls = []; // Array para armazenar as URLs de todas as imagens
+<script>
+    let currentImageIndex = 0;
+    let imageUrls = [];
 
-        document.addEventListener('DOMContentLoaded', function() {
-            // Popula o array imageUrls e adiciona a classe 'image-grid' para facilitar a seleção
-            const imageLinks = document.querySelectorAll('.image-grid a');
-            imageLinks.forEach(link => {
-                imageUrls.push(link.getAttribute('data-image-url'));
-            });
+    document.addEventListener('DOMContentLoaded', function() {
+        const imageLinks = document.querySelectorAll('.image-grid a');
+        imageUrls = Array.from(imageLinks).map(link => link.getAttribute('data-image-url'));
 
-            // Esconde a legenda se estiver vazia
-            const modalCaption = document.getElementById('modalCaption');
-            if (modalCaption && modalCaption.innerText.trim() === '') {
-                modalCaption.classList.add('hidden');
-            }
+        const modalCaption = document.getElementById('modalCaption');
+        if (modalCaption && modalCaption.innerText.trim() === '') {
+            modalCaption.classList.add('hidden');
+        }
+    });
 
-            // --- Lógica de Curtidas (JS) - AGORA USANDO FETCH API ---
-            const likeButton = document.getElementById('like-button-{{ gallery.pk }}');
-            const likesCountSpan = document.getElementById('gallery-likes-count-{{ gallery.pk }}');
-            const galleryId = likeButton.dataset.galleryId;
-            let userHasLiked = likeButton.dataset.liked === 'true'; // Pega o estado inicial do like
+    function openModal(clickedElement) {
+        currentImageIndex = parseInt(clickedElement.dataset.index);
+        updateModalImage();
+        document.getElementById('imageModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
 
-            // Função para obter o token CSRF do cookie
-            function getCookie(name) {
-                let cookieValue = null;
-                if (document.cookie && document.cookie !== '') {
-                    const cookies = document.cookie.split(';');
-                    for (let i = 0; i < cookies.length; i++) {
-                        const cookie = cookies[i].trim();
-                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                            break;
-                        }
-                    }
-                }
-                return cookieValue;
-            }
+    function updateModalImage() {
+        const modalImage = document.getElementById('modalImage');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
 
-            if (likeButton) { // Garante que o botão existe antes de adicionar o listener
-                console.log("Botão de like encontrado e script de like carregado."); // DEBUG: Adicionado para verificar carregamento
-                likeButton.addEventListener('click', function() {
-                    console.log("Botão de like clicado!"); // DEBUG: Adicionado para verificar clique
+        modalImage.src = imageUrls[currentImageIndex];
 
-                    // Verifica se o usuário está logado
-                    if (!{{ user.is_authenticated|lower }}) {
-                        alert('Você precisa estar logado para curtir uma galeria.');
-                        window.location.href = "{% url 'account_login' %}"; // Use a URL de login do app de contas
-                        return;
-                    }
+        prevBtn.style.display = (currentImageIndex === 0) ? 'none' : 'block';
+        nextBtn.style.display = (currentImageIndex === imageUrls.length - 1) ? 'none' : 'block';
+    }
 
-                    const csrftoken = getCookie('csrftoken');
-
-                    fetch(`{% url 'galleries_pub:like_public_gallery' pk=gallery.pk %}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': csrftoken,
-                        },
-                        body: JSON.stringify({}) // Corpo vazio para POST simples
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            return response.json().then(err => {
-                                throw new Error(err.message || 'Erro desconhecido do servidor.');
-                            }).catch(() => {
-                                throw new Error(`Erro do servidor: ${response.status} ${response.statusText}`);
-                            });
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        // A view like_public_gallery já retorna 'liked' e 'likes_count'
-                        userHasLiked = data.liked;
-                        likesCountSpan.textContent = data.likes_count;
-
-                        // Atualiza as classes e o texto do botão
-                        if (userHasLiked) {
-                            likeButton.classList.remove('bg-roxo2', 'hover:bg-roxo1');
-                            likeButton.classList.add('bg-red-500', 'hover:bg-red-600');
-                            likeButton.textContent = 'Descurtir';
-                        } else {
-                            likeButton.classList.remove('bg-red-500', 'hover:bg-red-600');
-                            likeButton.classList.add('bg-roxo2', 'hover:bg-roxo1');
-                            likeButton.textContent = 'Curtir';
-                        }
-                        console.log(data.message);
-                    })
-                    .catch(error => {
-                        console.error("Erro ao curtir/descurtir:", error);
-                        alert("Ocorreu um erro ao processar o like. Por favor, tente novamente. Detalhes: " + error.message);
-                    });
-                });
-            } else {
-                console.error("Botão de like com ID 'like-button-{{ gallery.pk }}' não encontrado."); // DEBUG: Adicionado para depuração
-            }
-        });
-
-        // Funções do modal de imagens
-        function openModal(clickedElement) {
-            currentImageIndex = parseInt(clickedElement.dataset.index);
+    function showNextImage() {
+        if (currentImageIndex < imageUrls.length - 1) {
+            currentImageIndex++;
             updateModalImage();
-            document.getElementById('imageModal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
         }
+    }
 
-        function updateModalImage() {
-            const modalImage = document.getElementById('modalImage');
-            const prevBtn = document.getElementById('prevBtn');
-            const nextBtn = document.getElementById('nextBtn');
-
-            modalImage.src = imageUrls[currentImageIndex];
-
-            prevBtn.style.display = (currentImageIndex === 0) ? 'none' : 'block';
-            nextBtn.style.display = (currentImageIndex === imageUrls.length - 1) ? 'none' : 'block';
+    function showPreviousImage() {
+        if (currentImageIndex > 0) {
+            currentImageIndex--;
+            updateModalImage();
         }
+    }
 
-        function showNextImage() {
-            if (currentImageIndex < imageUrls.length - 1) {
-                currentImageIndex++;
-                updateModalImage();
-            }
+    function closeModal() {
+        document.getElementById('imageModal').classList.add('hidden');
+        document.getElementById('modalImage').src = '';
+        document.body.style.overflow = '';
+    }
+
+    document.getElementById('imageModal').addEventListener('click', function(event) {
+        if (event.target === this || event.target.tagName === 'IMG') {
+            closeModal();
         }
+    });
 
-        function showPreviousImage() {
-            if (currentImageIndex > 0) {
-                currentImageIndex--;
-                updateModalImage();
-            }
+    document.addEventListener('keydown', function(event) {
+        if (document.getElementById('imageModal').classList.contains('hidden')) {
+            return;
         }
-
-        function closeModal() {
-            document.getElementById('imageModal').classList.add('hidden');
-            document.getElementById('modalImage').src = '';
-            document.body.style.overflow = '';
+        if (event.key === 'Escape') {
+            closeModal();
+        } else if (event.key === 'ArrowRight') {
+            showNextImage();
+        } else if (event.key === 'ArrowLeft') {
+            showPreviousImage();
         }
+    });
 
-        document.getElementById('imageModal').addEventListener('click', function(event) {
-            if (event.target === this || event.target.tagName === 'IMG') {
-                closeModal();
-            }
+    const backToTopBtn = document.getElementById('backToTopBtn');
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 300) {
+            backToTopBtn.classList.remove('hidden');
+        } else {
+            backToTopBtn.classList.add('hidden');
+        }
+    });
+
+    backToTopBtn.addEventListener('click', () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
         });
+    });
 
-        document.addEventListener('keydown', function(event) {
-            if (document.getElementById('imageModal').classList.contains('hidden')) {
-                return;
-            }
-            if (event.key === 'Escape') {
-                closeModal();
-            } else if (event.key === 'ArrowRight') {
-                showNextImage();
-            } else if (event.key === 'ArrowLeft') {
-                showPreviousImage();
-            }
-        });
+</script>
 
-        // Lógica para o botão "Voltar ao Topo"
-        const backToTopBtn = document.getElementById('backToTopBtn');
-
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 300) {
-                backToTopBtn.classList.remove('hidden');
-            } else {
-                backToTopBtn.classList.add('hidden');
-            }
-        });
-
-        backToTopBtn.addEventListener('click', () => {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        });
-
-        window.addEventListener('resize', () => {
-            // Nada específico para redimensionar aqui, pois o CSS já lida com max-width/height
-        });
-    </script>
 {% endblock %}
