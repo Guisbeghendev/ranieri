@@ -64,8 +64,8 @@ def process_image_task(self, image_pk):
                         img_thumb.thumbnail(THUMBNAIL_MAX_SIZE, PillowImage.Resampling.LANCZOS)
 
                         thumb_io = io.BytesIO()
-                        # Salva o thumbnail sempre como JPEG para otimização, com qualidade 85
-                        img_thumb.convert("RGB").save(thumb_io, format='JPEG', quality=85, exif=b'')
+                        # Salva o thumbnail sempre como JPEG para otimização, com qualidade 75
+                        img_thumb.convert("RGB").save(thumb_io, format='JPEG', quality=75, exif=b'')
 
                         thumb_filename = os.path.basename(image_instance.image_file_original.name)
                         name, ext = os.path.splitext(thumb_filename)
@@ -137,7 +137,7 @@ def process_image_task(self, image_pk):
 
                                 watermarked_io = io.BytesIO()
                                 # Salva como JPEG, mesmo que a original fosse PNG, para otimização
-                                watermarked_output.convert("RGB").save(watermarked_io, format='JPEG', quality=85,
+                                watermarked_output.convert("RGB").save(watermarked_io, format='JPEG', quality=75,
                                                                        exif=b'')
 
                                 watermarked_filename = os.path.basename(image_instance.image_file_original.name)
@@ -165,7 +165,7 @@ def process_image_task(self, image_pk):
                         try:
                             no_watermark_io = io.BytesIO()
                             # Salva a versão de display como JPEG, sem marca d'água
-                            img_display.convert("RGB").save(no_watermark_io, format='JPEG', quality=85, exif=b'')
+                            img_display.convert("RGB").save(no_watermark_io, format='JPEG', quality=75, exif=b'')
 
                             original_filename = os.path.basename(image_instance.image_file_original.name)
                             name, ext = os.path.splitext(original_filename)
