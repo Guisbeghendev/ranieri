@@ -238,3 +238,25 @@ class GaleriaLike(models.Model):
 
     def __str__(self):
         return f'{self.user.username} curtiu {self.galeria.name}'
+
+# --- NOVO MODELO: Repertorio ---
+class Repertorio(models.Model):
+    title = models.CharField(max_length=200, verbose_name="Título da Música")
+    composer = models.CharField(max_length=200, blank=True, null=True, verbose_name="Compositor")
+    youtube_video_id = models.CharField(max_length=20, verbose_name="ID do Vídeo do YouTube",
+                                        help_text="O ID (os últimos caracteres) do link do vídeo do YouTube. Ex: para 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', o ID é 'dQw4w9WgXcQ'.")
+    curiosity = models.TextField(blank=True, null=True, verbose_name="Curiosidade sobre a música")
+    inclusion_year = models.PositiveIntegerField(blank=True, null=True, verbose_name="Ano de Inclusão",
+                                                 help_text="O ano em que a música foi incluída no repertório.")
+
+    class Meta:
+        verbose_name = 'Música do Repertório'
+        verbose_name_plural = 'Músicas do Repertório'
+        ordering = ['title']
+        db_table = 'repertorio_coral'  # Novo nome da tabela no banco de dados
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Criado Em")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Atualizado Em")
+
+    def __str__(self):
+        return self.title

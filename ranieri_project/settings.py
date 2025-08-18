@@ -206,7 +206,29 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 X_FRAME_OPTIONS = 'DENY'
 
-# --- INÍCIO DA CONFIGURAÇÃO DE LOGGING PARA DEBUG ---
+# --- INÍCIO DA CONFIGURAÇÃO DE LOGGING DINÂMICA E ROBUSTA ---
+# Este bloco de código usa o caminho do log do servidor se ele existir,
+# e cria um caminho local se não existir, sem depender da variável DEBUG.
+
+import os
+from pathlib import Path
+
+# Certifique-se de que BASE_DIR está definido no topo do seu arquivo
+# Exemplo: BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Caminho de log para o servidor de staging/produção
+SERVER_LOG_FILE = '/var/www/escolajoseranieri.com.br/html/logs/django_debug.log'
+
+# Verifica se o diretório do servidor existe.
+# Se não existir (estamos no ambiente local), usa um caminho de log local.
+if os.path.exists(os.path.dirname(SERVER_LOG_FILE)):
+    LOG_FILE = SERVER_LOG_FILE
+else:
+    LOG_DIR = os.path.join(BASE_DIR, 'logs')
+    # Cria o diretório de logs local se ele ainda não existir.
+    os.makedirs(LOG_DIR, exist_ok=True)
+    LOG_FILE = os.path.join(LOG_DIR, 'django_debug.log')
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -214,8 +236,7 @@ LOGGING = {
         'file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            # ALtere esta linha:
-            'filename': '/var/www/escolajoseranieri.com.br/html/logs/django_debug.log', # Caminho para o novo log de depuração
+            'filename': LOG_FILE, # O nome do arquivo é a variável que criamos
         },
         'console': {
             'level': 'DEBUG',
@@ -240,4 +261,7 @@ LOGGING = {
         },
     },
 }
-# --- FIM DA CONFIGURAÇÃO DE LOGGING PARA DEBUG ---
+# --- FIM DA CONFIGURAÇÃO DE LOGGING DINÂMICA E ROBUSTA ---
+
+
+
