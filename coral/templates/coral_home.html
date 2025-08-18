@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Coral Ranieri - {{ project_name }}{% endblock %}
+
+{% block content %}
+<section class="bg-white text-preto1 body-font flex items-center justify-center rounded-2xl min-h-[calc(100vh-100px)]">
+    <div class="container mx-auto flex px-5 py-16 flex-col items-center text-center">
+        <h1 class="title-font sm:text-4xl text-3xl mb-8 font-medium text-preto1">
+            Coral Ranieri
+        </h1>
+        <p class="mb-8 leading-relaxed max-w-xl text-gray-700">
+            Bem-vindo ao espaço do Coral Ranieri. Escolha uma opção para continuar.
+        </p>
+        <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
+            <a href="{% url 'coral:coral_page' %}"
+               class="inline-flex text-preto1 bg-laranja1 border-0 py-3 px-8
+                      focus:outline-none hover:bg-laranja1-hover rounded-full text-lg
+                      transition duration-300 font-bold shadow-lg transform hover:scale-105 active:scale-95">
+                História do Coral
+            </a>
+            <a href="#"
+               class="inline-flex text-white bg-roxo2 border-0 py-3 px-8
+                      focus:outline-none hover:bg-roxo1-hover rounded-full text-lg
+                      transition duration-300 font-bold shadow-lg transform hover:scale-105 active:scale-95">
+                Repertório (Em Breve)
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}
