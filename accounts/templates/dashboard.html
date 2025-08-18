@@ -61,6 +61,34 @@
     <!-- Boas-vindas: Laranja1 - FONTE AJUSTADA PARA RESPONSIVIDADE -->
     <h1 class="text-3xl md:text-4xl font-bold text-laranja1 mb-8">Bem-vindo(a), {{ user_name }}!</h1>
 
+    <!-- card para preencher o campo quem_sou_para_escola -->
+    {% if not user.profile.quem_sou_para_escola %}
+        <div class="bg-prata1 p-6 rounded-lg shadow-md mb-8">
+            <h2 class="text-2xl font-semibold text-roxo1 mb-4">Atualize seu Perfil</h2>
+            <div class="bg-amarelo1 p-4 sm:p-6 rounded-lg shadow-md mb-4 text-preto1">
+                <p>Seu perfil está incompleto. Por favor, conte para a escola quem você é:</p>
+                <p class="mt-2 text-sm text-gray-700 font-bold">Aluno, pai, ex-aluno, professor...</p>
+            </div>
+
+            <form method="post" action="{% url 'accounts:update_profile_field' %}" class="space-y-4">
+                {% csrf_token %}
+                <div>
+                    <label for="id_quem_sou_para_escola" class="block text-sm font-medium text-preto1 mb-2">
+                        Quem sou para a Escola?
+                    </label>
+                    <textarea id="id_quem_sou_para_escola" name="quem_sou_para_escola" rows="4" placeholder="Conte um pouco sobre sua relação com a escola..." class="block w-full rounded-md border-gray-300 shadow-sm focus:border-roxo1 focus:ring-roxo1"></textarea>
+                </div>
+                <button type="submit" class="mt-4 px-6 py-3 bg-roxo2 text-branco1 rounded-lg shadow-md hover:bg-roxo1 transition duration-300 text-sm">
+                    Salvar
+                </button>
+            </form>
+        </div>
+    {% endif %}
+    <!-- fim card para preencher o campo quem_sou_para_escola -->
+
+
+
+
     <!-- col-span define quantas colunas cada card ira ocupar-->
 
     <!-- Início da Definição do Grid Principal: Define 1 coluna em mobile, 2 em md, e 3 em lg -->

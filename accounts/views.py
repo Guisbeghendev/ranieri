@@ -181,3 +181,23 @@ class DeleteAccountView(LoginRequiredMixin, DeleteView):
         context = super().get_context_data(**kwargs)
         context['user_to_delete'] = self.request.user
         return context
+
+
+# FUNÇÃO PARA PROCESSAR O CAMPO de atualização do campo quem_sou_para_escola DO PERFIL
+@login_required
+def update_profile_field(request):
+    """
+    Processa o formulário de atualização do campo quem_sou_para_escola.
+    Redireciona para o dashboard após o processamento.
+    """
+    if request.method == 'POST':
+        profile = request.user.profile
+        form = ProfileForm(request.POST, instance=profile)
+
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Seu perfil foi atualizado com sucesso!")
+        else:
+            messages.error(request, "Houve um erro ao atualizar seu perfil. Por favor, verifique os campos.")
+
+    return redirect('accounts:dashboard')

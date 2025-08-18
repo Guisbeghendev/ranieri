@@ -13,4 +13,5 @@ urlpatterns = [
     path('profile/', views.ViewProfileView.as_view(), name='profile'), # Rota para exibir sa página de perfil
     path('profile/edit/', views.EditProfileView.as_view(), name='edit_profile'), # Rota para editar o perfil
     path('profile/delete/', views.DeleteAccountView.as_view(), name='delete_account'), # Rota para exclusão da conta
+    path('atualizar-perfil/', views.update_profile_field, name='update_profile_field'), #rota para atualizar campo quem_sou_para_escola
 ]
