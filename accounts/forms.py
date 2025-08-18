@@ -9,6 +9,13 @@ User = get_user_model()  # Obtém o modelo de usuário ativo no projeto
 
 # Formulário de Registro de Usuário - AGORA USANDO SEU MODELO CUSTOMIZADO E GARANTINDO O USO DE get_user_model()
 class UserRegistrationForm(UserCreationForm):
+    # TRECHO A SER ALTERADO: Redefine o campo username para adicionar o help_text
+    username = forms.CharField(
+        max_length=150,
+        help_text='Use seu nome ou um apelido único. Não use números de registro ou documentos.',
+        required=True
+    )
+
     class Meta(UserCreationForm.Meta):
         model = User  # Garante que o formulário use o nosso modelo User
         fields = UserCreationForm.Meta.fields + ('email',)  # Adiciona o campo de email
