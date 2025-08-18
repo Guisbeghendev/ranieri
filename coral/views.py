@@ -18,12 +18,12 @@ def get_chapter_filenames():
 # Nova view para a página principal do app Coral
 class CoralHomeView(TemplateView):
     # Simplesmente renderiza o novo template HTML
-    template_name = 'coral/coral_home.html'
+    template_name = 'coral_home.html'
 
 
 # View da página da História do Coral (a view original)
 class CoralPageView(TemplateView):
-    template_name = 'coral/coral_page.html'  # Ajuste no caminho do template
+    template_name = 'coral_page.html'  # Ajuste no caminho do template
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
