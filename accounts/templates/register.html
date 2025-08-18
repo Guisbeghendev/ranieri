@@ -42,6 +42,12 @@
                 {# Aplica classes Tailwind diretamente ao campo de entrada #}
                 {# Fundo do input agora é branco, texto preto1, borda cinza, placeholder cinza #}
                 {{ field|attr:"class:w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-laranja1 bg-white text-preto1 placeholder-gray-500" }} {# <--- PADRONIZADO COM LOGIN #}
+
+                {# ADICIONADO: Este trecho verifica se há um texto de ajuda e o exibe #}
+                {% if field.help_text %}
+                    <p class="text-xs text-gray-500 mt-1">{{ field.help_text }}</p>
+                {% endif %}
+
                 {# Exibe erros específicos do campo #}
                 {% if field.errors %}
                     <p class="text-red-600 text-xs italic mt-2">{{ field.errors }}</p> {# <--- PADRONIZADO COM LOGIN #}
