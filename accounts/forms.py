@@ -12,7 +12,7 @@ class UserRegistrationForm(UserCreationForm):
     # TRECHO ATUALIZADO: Redefine o campo username para mudar o label e adicionar o help_text
     username = forms.CharField(
         max_length=150,
-        label='Nome ou Apelido',  # AQUI! O novo label do campo
+        label='Nome ou Apelido',  # O novo label do campo
         help_text='Use seu nome ou um apelido único. Não use números de registro ou documentos.',
         required=True
     )
@@ -24,7 +24,11 @@ class UserRegistrationForm(UserCreationForm):
 
 # Formulário de Login de Usuário
 class UserLoginForm(AuthenticationForm):
-    pass
+    # AQUI ESTÁ A CORREÇÃO: Redefinimos o campo username do formulário de autenticação
+    username = forms.CharField(
+        label='Nome ou Apelido',  # O novo label para o formulário de login
+        widget=forms.TextInput(attrs={'autofocus': True, 'class': 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-laranja1 bg-white text-preto1 placeholder-gray-500'})
+    )
 
 
 class UserForm(forms.ModelForm):
