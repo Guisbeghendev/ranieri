@@ -9,9 +9,10 @@ User = get_user_model()  # Obtém o modelo de usuário ativo no projeto
 
 # Formulário de Registro de Usuário - AGORA USANDO SEU MODELO CUSTOMIZADO E GARANTINDO O USO DE get_user_model()
 class UserRegistrationForm(UserCreationForm):
-    # TRECHO A SER ALTERADO: Redefine o campo username para adicionar o help_text
+    # TRECHO ATUALIZADO: Redefine o campo username para mudar o label e adicionar o help_text
     username = forms.CharField(
         max_length=150,
+        label='Nome ou Apelido',  # AQUI! O novo label do campo
         help_text='Use seu nome ou um apelido único. Não use números de registro ou documentos.',
         required=True
     )
