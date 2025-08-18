@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from .forms import UserRegistrationForm, UserLoginForm, UserForm, ProfileForm
 from django.contrib.auth import login, logout, get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView, View, DeleteView
 from django.urls import reverse_lazy
 from django.contrib import messages
