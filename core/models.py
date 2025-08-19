@@ -240,7 +240,7 @@ class GaleriaLike(models.Model):
         return f'{self.user.username} curtiu {self.galeria.name}'
 
 # --- NOVO MODELO: Repertorio ---
-class Repertorio(models.Model):
+class Repertorio_Coral(models.Model):
     title = models.CharField(max_length=200, verbose_name="Título da Música")
     composer = models.CharField(max_length=200, blank=True, null=True, verbose_name="Compositor")
     youtube_video_id = models.CharField(max_length=20, verbose_name="ID do Vídeo do YouTube",

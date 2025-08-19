@@ -2,7 +2,8 @@
 import json
 # Importamos a classe ListView para buscar a lista de músicas
 from django.views.generic import TemplateView, ListView
-from .models import Repertorio # Importamos o modelo Repertorio
+# CORRIGIDO: A importação agora aponta para o modelo correto
+from core.models import Repertorio_Coral
 
 # Função auxiliar para manter a lógica de listagem de capítulos separada da view
 def get_chapter_filenames():
@@ -41,11 +42,11 @@ class CoralPageView(TemplateView):
 # --- NOVA VIEW PARA O REPERTÓRIO ---
 class RepertorioListView(ListView):
     # O modelo que a view usará
-    model = Repertorio
+    # CORRIGIDO: O modelo agora é Repertorio_Coral
+    model = Repertorio_Coral
     # O nome do template que será renderizado
     template_name = 'repertorio_list.html'
     # O nome da variável de contexto que contém a lista de objetos
     context_object_name = 'repertorio_list'
     # Se quiser ordenar por ano, por exemplo:
     # ordering = ['-inclusion_year']
-

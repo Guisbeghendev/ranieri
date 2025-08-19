@@ -1,7 +1,8 @@
 from django.contrib import admin
 from guardian.admin import GuardedModelAdminMixin
 # Importe Galeria e AudienceGroup, pois Galeria tem um ManyToManyField para AudienceGroup
-from .models import Galeria, AudienceGroup, Repertorio
+# CORRIGIDO: A importação agora aponta para o modelo correto na pasta 'core'
+from core.models import Galeria, AudienceGroup, Repertorio_Coral
 
 # Registra o modelo Galeria no Django Admin
 @admin.register(Galeria)
@@ -14,11 +15,11 @@ class GaleriaAdmin(GuardedModelAdminMixin, admin.ModelAdmin):
     # Se você quiser adicionar os grupos de audiência para edição direta na galeria
     filter_horizontal = ('audience_groups',)
 
-# --- NOVO REGISTRO: Repertorio ---
-@admin.register(Repertorio)
-class RepertorioAdmin(admin.ModelAdmin):
+# --- NOVO REGISTRO: Repertorio_Coral ---
+# CORRIGIDO: O registro agora usa o nome do modelo correto
+@admin.register(Repertorio_Coral)
+class Repertorio_CoralAdmin(admin.ModelAdmin):
     list_display = ('title', 'composer', 'inclusion_year', 'created_at')
     list_filter = ('inclusion_year',)
     search_fields = ('title', 'composer')
     list_per_page = 25
-
