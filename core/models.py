@@ -253,7 +253,6 @@ class Repertorio_Coral(models.Model):
         verbose_name = 'Música do Repertório'
         verbose_name_plural = 'Músicas do Repertório'
         ordering = ['title']
-        db_table = 'repertorio_coral'  # Novo nome da tabela no banco de dados
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Criado Em")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Atualizado Em")
