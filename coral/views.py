@@ -1,11 +1,8 @@
-# coral/views.py
 import json
-# Importamos a classe ListView para buscar a lista de músicas
 from django.views.generic import TemplateView, ListView
-# CORRIGIDO: A importação agora aponta para o modelo correto
 from core.models import Repertorio_Coral
 
-# Função auxiliar para manter a lógica de listagem de capítulos separada da view
+
 def get_chapter_filenames():
     """
     Retorna a lista de nomes de arquivos JSON dos capítulos na ordem desejada.
@@ -13,40 +10,47 @@ def get_chapter_filenames():
     return [
         'Capitulo1.json',
         'Capitulo2.json',
-        # ... adicione mais conforme você criar os arquivos JSON
     ]
 
 
-# Nova view para a página principal do app Coral
 class CoralHomeView(TemplateView):
-    # Simplesmente renderiza o novo template HTML
     template_name = 'coral_home.html'
 
 
-# View da página da História do Coral (a view original)
 class CoralPageView(TemplateView):
-    template_name = 'coral_page.html'  # Ajuste no caminho do template
+    template_name = 'coral_page.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        # Obtém os nomes dos arquivos JSON dos capítulos usando a função auxiliar
         chapter_filenames = get_chapter_filenames()
-
-        # Passa a lista de nomes de arquivos para o template como JSON
         context['chapter_filenames_json'] = json.dumps(chapter_filenames)
-
         return context
 
 
-# --- NOVA VIEW PARA O REPERTÓRIO ---
+# --- VIEW DE REPERTÓRIO COM FILTRO POR ANO ---
 class RepertorioListView(ListView):
-    # O modelo que a view usará
-    # CORRIGIDO: O modelo agora é Repertorio_Coral
     model = Repertorio_Coral
-    # O nome do template que será renderizado
     template_name = 'repertorio_list.html'
-    # O nome da variável de contexto que contém a lista de objetos
     context_object_name = 'repertorio_list'
-    # Se quiser ordenar por ano, por exemplo:
-    # ordering = ['-inclusion_year']
+    # Você pode remover a linha 'ordering = ['-inclusion_year']' se o filtro substituir isso
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Obtém o ano da URL, se existir (ex: ?ano=2024)
+        ano = self.request.GET.get('ano')
+        if ano:
+            try:
+                # Filtra o queryset pelo ano, se o valor for um número válido
+                queryset = queryset.filter(inclusion_year=int(ano))
+            except (ValueError, TypeError):
+                # Ignora o filtro se o valor do ano não for um número
+                pass
+        return queryset.order_by('-inclusion_year', 'title')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Obtém a lista de anos únicos para o filtro
+        anos_disponiveis = Repertorio_Coral.objects.values_list('inclusion_year', flat=True).distinct().order_by('-inclusion_year')
+        context['anos_disponiveis'] = anos_disponiveis
+        context['selected_year'] = self.request.GET.get('ano', '')
+        return context
