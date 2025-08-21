@@ -15,29 +15,6 @@
         <p>Os vídeos que não for possível assistir por aqui, basta clicar neles que serão abertos no próprio YouTube e assim será possível assisti-los!</p>
     </div>
 
-    <!-- Filtro por ano -->
-    <div class="max-w-4xl mx-auto mb-8">
-        <form method="get" action="{% url 'coral:repertorio_list' %}">
-            <div class="flex items-center space-x-4">
-                <label for="id_ano" class="font-semibold text-gray-700 dark:text-gray-300">Filtrar por ano:</label>
-                <select id="id_ano" name="ano" onchange="this.form.submit()"
-                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-roxo2-hover focus:border-roxo2-hover sm:text-sm">
-                    <option value="">Todos</option>
-                    {% for ano in anos_disponiveis %}
-                        <option value="{{ ano }}" {% if selected_year|slugify == ano|slugify %}selected{% endif %}>
-                            {{ ano }}
-                        </option>
-                    {% endfor %}
-                </select>
-                {% if selected_year %}
-                    <a href="{% url 'coral:repertorio_list' %}" class="px-4 py-2 text-sm font-medium text-white bg-roxo2 rounded-md hover:bg-roxo2-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-roxo2-hover">
-                        Limpar
-                    </a>
-                {% endif %}
-            </div>
-        </form>
-    </div>
-
     <div class="py-12 px-2 sm:px-4 lg:px-6 max-w-4xl mx-auto">
         <div class="p-4 md:p-6 lg:p-8">
             {% if repertorio_list %}
