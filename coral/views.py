@@ -50,7 +50,7 @@ class RepertorioListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Obtém a lista de anos únicos para o filtro
-        anos_disponiveis = Repertorio_Coral.objects.values_list('inclusion_year', flat=True).distinct().order_by('-inclusion_year')
+        anos_disponiveis = sorted(Repertorio_Coral.objects.values_list('inclusion_year', flat=True).distinct(), reverse=True)
         context['anos_disponiveis'] = anos_disponiveis
         context['selected_year'] = self.request.GET.get('ano', '')
         return context
