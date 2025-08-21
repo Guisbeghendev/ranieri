@@ -17,7 +17,7 @@
 
     <!-- Filtro por ano -->
     <div class="max-w-4xl mx-auto mb-8">
-        <form method="get" action="{% url 'repertorio_list' %}">
+        <form method="get" action="{% url 'coral:repertorio_list' %}">
             <div class="flex items-center space-x-4">
                 <label for="id_ano" class="font-semibold text-gray-700 dark:text-gray-300">Filtrar por ano:</label>
                 <select id="id_ano" name="ano" onchange="this.form.submit()"
@@ -30,7 +30,7 @@
                     {% endfor %}
                 </select>
                 {% if selected_year %}
-                    <a href="{% url 'repertorio_list' %}" class="px-4 py-2 text-sm font-medium text-white bg-roxo2 rounded-md hover:bg-roxo2-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-roxo2-hover">
+                    <a href="{% url 'coral:repertorio_list' %}" class="px-4 py-2 text-sm font-medium text-white bg-roxo2 rounded-md hover:bg-roxo2-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-roxo2-hover">
                         Limpar
                     </a>
                 {% endif %}
