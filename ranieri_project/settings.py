@@ -160,13 +160,15 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/topics/static-files/
 
 STATIC_URL = 'static/'
+
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'), # Onde seus arquivos estáticos de desenvolvimento estarão
+    os.path.join(BASE_DIR, 'static'),
 ]
-STATIC_ROOT = BASE_DIR / 'staticfiles'  # Onde o Django coletará os arquivos para produção
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'mediafiles' # Onde os uploads (galerias, avatares) serão salvos
+MEDIA_ROOT = BASE_DIR / 'mediafiles'
 
 
 
