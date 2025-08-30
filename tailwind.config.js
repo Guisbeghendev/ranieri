@@ -7,7 +7,8 @@ module.exports = { // Adaptado de 'export default' para Node.js
     // o que é normal. No FUTURO, quando tiver HTMLs, ele vai escanear essas pastas.
     "./templates/**/*.html", // Para templates na raiz do seu projeto Django (ex: proj001-ranieri/templates/...)
     "./*/templates/**/*.html", // Para templates dentro de apps Django (ex: proj001-ranieri/myapp/templates/...)
-    "./ranieri_project/**/*.html", // Para qualquer HTML dentro da pasta ranieri_project
+    "./ranieri_project/templates/**/*.html", // Para qualquer HTML dentro da pasta ranieri_project
+    "./ranieri_project/templates/*.html",
     // Se você usa classes Tailwind em arquivos JavaScript/TypeScript (no frontend), adicione os caminhos aqui:
     // "./ranieri_project/**/*.{js,ts,jsx,tsx}",
     // Adicione o caminho para os arquivos do Preline UI
