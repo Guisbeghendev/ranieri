@@ -4,6 +4,11 @@ from ranieri_project.settings.base import * # Acessa o arquivo base.py corretame
 
 # --- Configurações Específicas para Staging ---
 
+# SECRET_KEY para segurança da aplicação.
+# Adicionamos a lógica de leitura da variável de ambiente aqui,
+# garantindo que o Django possa ler a chave do Apache.
+SECRET_KEY = os.environ.get('SECRET_KEY', 'sua_chave_de_desenvolvimento_aqui')
+
 DEBUG = True
 
 ALLOWED_HOSTS = ['testes.escolajoseranieri.com.br', 'localhost', '127.0.0.1']
