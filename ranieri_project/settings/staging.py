@@ -11,7 +11,9 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'sua_chave_de_desenvolvimento_aqui')
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['testes.escolajoseranieri.com.br', 'localhost', '127.0.0.1']
+# A lista de hosts permitidos precisa incluir o nome de domínio que
+# está sendo usado, 'staging.escolajoseranieri.com.br'.
+ALLOWED_HOSTS = ['staging.escolajoseranieri.com.br', 'localhost', '127.0.0.1']
 
 # Configuração do banco de dados para o ambiente de testes (MySQL)
 DATABASES = {
