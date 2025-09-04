@@ -15,8 +15,11 @@ from photographer.tasks import process_image_task
 def get_watermark_choices():
     watermark_dir = os.path.join(settings.MEDIA_ROOT, 'watermarks')
     choices = [('', 'Sem Marca D\'água')]
-    if not os.path.exists(watermark_dir):
-        os.makedirs(watermark_dir)
+
+    # A linha abaixo garante que o diretório 'watermarks' existe.
+    # Usar exist_ok=True evita o erro se a pasta já existir.
+    os.makedirs(watermark_dir, exist_ok=True)
+
     for filename in os.listdir(watermark_dir):
         if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
             choices.append((filename, filename.replace('_', ' ').replace('-', ' ').capitalize()))
@@ -238,6 +241,7 @@ class GaleriaLike(models.Model):
 
     def __str__(self):
         return f'{self.user.username} curtiu {self.galeria.name}'
+
 
 # --- NOVO MODELO: Repertorio ---
 class Repertorio_Coral(models.Model):
