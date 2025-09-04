@@ -26,3 +26,8 @@ DATABASES = {
         'PORT': '',                          # Porta do MySQL (vazio para padrão)
     }
 }
+
+# Caminho para os arquivos de mídia (imagens, uploads, etc)
+# Apontamos para o diretório "mediafiles" que você já possui.
+MEDIA_ROOT = BASE_DIR / 'mediafiles'
+MEDIA_URL = '/mediafiles/'
