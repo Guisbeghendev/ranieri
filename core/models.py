@@ -16,13 +16,14 @@ def get_watermark_choices():
     watermark_dir = os.path.join(settings.MEDIA_ROOT, 'watermarks')
     choices = [('', 'Sem Marca D\'água')]
 
-    # A linha abaixo garante que o diretório 'watermarks' existe.
-    # Usar exist_ok=True evita o erro se a pasta já existir.
-    os.makedirs(watermark_dir, exist_ok=True)
+    # A linha abaixo foi ajustada para garantir que a pasta seja criada apenas
+    # se o caminho para a pasta de mídia for válido.
+    if settings.MEDIA_ROOT and os.path.isdir(settings.MEDIA_ROOT):
+        os.makedirs(watermark_dir, exist_ok=True)
+        for filename in os.listdir(watermark_dir):
+            if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
+                choices.append((filename, filename.replace('_', ' ').replace('-', ' ').capitalize()))
 
-    for filename in os.listdir(watermark_dir):
-        if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
-            choices.append((filename, filename.replace('_', ' ').replace('-', ' ').capitalize()))
     return choices
 
 
