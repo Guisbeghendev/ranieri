@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{{ project_name }}{% endblock %}</title>
     {# Caminho para seu CSS compilado do Tailwind #}
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/' %}{{ css_file }}">
     <style>
         /* Estilos para o fundo animado de gradiente - Adaptado para CSS puro */
         .animated-bg {
