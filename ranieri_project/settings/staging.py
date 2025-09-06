@@ -1,11 +1,13 @@
 import os
 from pathlib import Path
 from ranieri_project.settings.base import *
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # --- Configurações Específicas para Staging ---
 
-# Adicione esta linha para ler a chave da variável de ambiente do Apache.
-SECRET_KEY = os.environ.get('SECRET_KEY', 'sua_chave_de_desenvolvimento_aqui')
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 DEBUG = True
 
@@ -23,20 +25,25 @@ DATABASES = {
     }
 }
 
-# --- Configurações para arquivos estáticos e de mídia (servidos localmente) ---
-# O Django irá coletar todos os arquivos estáticos neste diretório.
-# O Apache irá servir este diretório através de um 'Alias'.
+# --- Configurações para arquivos estáticos (servidos localmente) ---
 STATIC_ROOT = '/var/www/escolajoseranieri.com.br/staging_html/staticfiles/'
 STATIC_URL = 'https://staging.escolajoseranieri.com.br/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
 
-# Configuração para arquivos de mídia (uploads de usuários)
-# Também servidos localmente pelo Apache.
-MEDIA_ROOT = '/var/www/escolajoseranieri.com.br/staging_html/mediafiles/'
-MEDIA_URL = 'https://staging.escolajoseranieri.com.br/mediafiles/'
 
+# --- Configuração do Amazon S3 para arquivos de Mídia ---
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_S3_REGION_NAME = 'us-east-1'
+
+AWS_STORAGE_BUCKET_NAME = 'ranieristaging'
+AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+
+# Define o armazenamento padrão para arquivos de mídia como S3
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
 
 # Celery settings para Staging (conforme discutido anteriormente)
 CELERY_BROKER_URL = 'amqp://celeryuser:Gsp@ranieri2025@localhost:5672//'
