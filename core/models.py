@@ -218,7 +218,7 @@ class Image(models.Model):
             print(f"Disparada tarefa Celery para processar imagem {self.pk} (após commit da transação).")
 
 
-# --- NOVO MODELO: GaleriaLike (para registrar as curtidas) ---
+# --- GaleriaLike (para registrar as curtidas) ---
 class GaleriaLike(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -244,7 +244,7 @@ class GaleriaLike(models.Model):
         return f'{self.user.username} curtiu {self.galeria.name}'
 
 
-# --- NOVO MODELO: Repertorio ---
+# --- Repertorio Coral---
 class Repertorio_Coral(models.Model):
     title = models.CharField(max_length=200, verbose_name="Título da Música")
     composer = models.CharField(max_length=200, blank=True, null=True, verbose_name="Compositor")
@@ -255,6 +255,7 @@ class Repertorio_Coral(models.Model):
                                                  help_text="O ano em que a música foi incluída no repertório.")
 
     class Meta:
+        db_table = 'repertorio_coral'
         verbose_name = 'Música do Repertório'
         verbose_name_plural = 'Músicas do Repertório'
         ordering = ['title']
