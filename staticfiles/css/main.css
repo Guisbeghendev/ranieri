@@ -1,4 +1,4 @@
-/* ranieri_project/static/css/main.css */
+/* /static/css/main.css */
 
 /*
    CORREÇÃO PARA TAILWIND CSS V4.X.X:
@@ -35,6 +35,21 @@
      classes como `hover:bg-roxo1` em seus HTMLs.
   */
 }
+
+/* --- CLASSE PARA A IMAGEM DE FUNDO DA HERO SECTION --- */
+/* O caminho da imagem é relativo à raiz do seu STATIC_URL, que é '/static/' */
+.hero-background-image {
+  background-image: url('/static/images/home_slide/slide1.jpg');
+}
+
+/* --- CLASSE PARA A FONTE PERMANENT MARKER COM FALLBACKS GROSSOS --- */
+.permanent-marker-regular {
+  font-family: "Permanent Marker", "Arial Black", "Impact", cursive;
+  font-weight: 400; /* O peso 400 é o padrão para Permanent Marker, mas os fallbacks serão grossos */
+  font-style: normal;
+}
+
+
 
 /* --- QUALQUER OUTRO CSS CUSTOMIZADO PODE SER ADICIONADO ABAIXO DESTAS DIRETIVAS --- */
 /* Exemplo de uma classe personalizada: */
