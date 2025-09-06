@@ -265,3 +265,28 @@ class Repertorio_Coral(models.Model):
 
     def __str__(self):
         return self.title
+
+
+# --- modelo SimCo_Receita ---
+class SimCo_Receita(models.Model):
+    title = models.CharField(max_length=200, verbose_name="Título da Receita")
+    youtube_video_id = models.CharField(
+        max_length=20,
+        verbose_name="ID do Vídeo do YouTube",
+        help_text="O ID (os últimos caracteres) do link do vídeo do YouTube."
+    )
+    description = models.TextField(blank=True, null=True, verbose_name="Descrição da Receita")
+    recipe = models.TextField(blank=True, null=True, verbose_name="Ingredientes e Modo de Preparo")
+
+    inclusion_date = models.DateField(auto_now_add=True, verbose_name="Data de Inclusão")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Atualizado Em")
+
+    class Meta:
+        db_table = 'simco_receita'
+        verbose_name = 'Receita do Simoninha'
+        verbose_name_plural = 'Receitas do Simoninha'
+        ordering = ['-inclusion_date', 'title']
+        db_table = 'simco_receita'
+
+    def __str__(self):
+        return self.title
